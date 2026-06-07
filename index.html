@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" x-data="gymApp()" :class="{ 'dark': theme === 'dark' }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForgePath OS | High-Performance Fitness Matrix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyberBlue: '#3b82f6',
+                        neonGreen: '#10b981',
+                        pulsePurple: '#8b5cf6',
+                        slateDark: '#020617',
+                        slatePanel: '#0f172a'
+                    }
+                }
+            }
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* EXPLICIT FORM BOX OVERRIDES - Eliminates default white backgrounds */
+        input, select, textarea {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+            transition: all 0.2s ease-in-out;
+        }
+        .dark input, .dark select, .dark textarea {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+            outline: none;
+        }
+        input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.6;
+            cursor: pointer;
+        }
+        .light input, .light select, .light textarea {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        .light input::-webkit-calendar-picker-indicator {
+            filter: invert(0);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #000; padding: 10px; font-size: 11px; text-align: left; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slateDark text-slate-900 dark:text-slate-100 min-h-screen">
+
+    <div class="no-print fixed top-6 right-6 z-[100]">
+        <button @click="toggleTheme()" class="p-3 rounded-2xl bg-white dark:bg-slatePanel shadow-2xl border border-slate-200 dark:border-slate-800 transition-transform active:scale-95">
+            <svg x-show="theme === 'dark'" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
+            <svg x-show="theme === 'light'" class="w-5 h-5 text-cyberBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
+    </div>
+
+    <div class="flex flex-col lg:flex-row min-h-screen overflow-hidden">
+
+        <aside class="no-print w-full lg:w-80 bg-white dark:bg-slatePanel border-r border-slate-200 dark:border-slate-800 p-8 flex flex-col gap-8 z-30">
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter text-cyberBlue italic">FORGEPATH <span class="text-slate-900 dark:text-white">OS</span></h1>
+                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">High-Fidelity Tracking System</p>
+            </div>
+
+            <button @click="openNewModal()" class="w-full bg-cyberBlue hover:bg-blue-600 text-white py-4 rounded-2xl font-extrabold shadow-xl shadow-blue-500/20 transition-all transform active:scale-95">
+                + CAPTURE DAILY PERFORMANCE
+            </button>
+
+            <div class="space-y-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800 pb-2">Target Objectives</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 block mb-1">TARGET TIMELINE (DAYS)</label>
+                        <input type="number" x-model="targets.days" @input="saveTargets()" class="w-full p-2 text-xs rounded-lg">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 block mb-1">TARGET MASS (KG)</label>
+                        <input type="number" step="0.1" x-model="targets.weight" @input="saveTargets()" class="w-full p-2 text-xs rounded-lg">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 block mb-1">DAILY ENERGY CEILING (KCAL)</label>
+                        <input type="number" x-model="targets.calories" @input="saveTargets()" class="w-full p-2 text-xs rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Protocols</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="window.print()" class="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold hover:bg-cyberBlue hover:text-white transition-all">PRINT PDF</button>
+                    <button @click="exportCSV()" class="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold hover:bg-neonGreen hover:text-white transition-all">EXPORT CSV</button>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between text-[11px] mb-2 font-bold text-slate-400 uppercase">
+                    <span>Timeline Velocity</span>
+                    <span class="text-cyberBlue" x-text="logs.length + ' / ' + targets.days + ' Days'"></span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div class="bg-cyberBlue h-full transition-all duration-1000 shadow-[0_0_8px_rgba(59,130,246,0.5)]" :style="`width: ${Math.min((logs.length / targets.days) * 100, 100)}%` text-zinc-400"></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 lg:p-12 space-y-10 overflow-y-auto h-screen no-scrollbar no-print">
+            
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 h-72 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Biometric Trajectory (Weight)</p>
+                    <div class="h-56"><canvas id="chartW"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 h-72 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Waist Compression Matrix</p>
+                    <div class="h-56"><canvas id="chartWaist"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 h-72 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Energy Partitioning (vs Target)</p>
+                    <div class="h-56"><canvas id="chartCal"></canvas></div>
+                </div>
+            </section>
+
+            <section class="space-y-6">
+                <h2 class="text-2xl font-black italic tracking-tight flex items-center gap-3">
+                    <span class="w-8 h-1 bg-cyberBlue rounded-full"></span> PERFORMANCE DATA ENGINE
+                </h2>
+                
+                <div class="grid grid-cols-1 gap-6 pb-24">
+                    <template x-for="log in logs" :key="log.id">
+                        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden transition-all hover:border-cyberBlue">
+                            <div class="flex flex-wrap justify-between gap-4 mb-6">
+                                <div>
+                                    <span class="text-cyberBlue font-bold text-xs tracking-wider" x-text="formatDate(log.date) + ' @ ' + log.workoutTime"></span>
+                                    <h3 class="text-2xl font-black uppercase tracking-tight italic" x-text="log.workoutName || 'Physical Reconstruction Session'"></h3>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <button @click="editEntry(log)" class="bg-slate-100 dark:bg-slate-800 hover:bg-cyberBlue hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all">EDIT</button>
+                                    <button @click="deleteEntry(log.id)" class="bg-slate-100 dark:bg-slate-800 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold text-red-500 tracking-widest transition-all">DELETE</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Mass Metrics</p>
+                                    <p class="text-lg font-black" x-text="log.weight + ' kg'"></p>
+                                </div>
+                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Waist Bounds</p>
+                                    <p class="text-lg font-black" x-text="log.waist + ' in'"></p>
+                                </div>
+                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Sleep Window</p>
+                                    <p class="text-lg font-black" x-text="log.sleep + ' hrs'"></p>
+                                </div>
+                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Energy Logged</p>
+                                    <p class="text-lg font-black text-pulsePurple" x-text="calculateLogCalories(log) + ' kcal'"></p>
+                                </div>
+                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 col-span-2 md:col-span-1">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Cardio Vector</p>
+                                    <p class="text-sm font-black text-neonGreen" x-text="log.cardio.time ? log.cardio.time + 'm' : '0m'"></p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <div>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">🏋️ Strength Volume Matrix</p>
+                                    <div class="space-y-2">
+                                        <template x-for="ex in log.exercises">
+                                            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
+                                                <span class="font-bold uppercase tracking-tight" x-text="ex.name"></span>
+                                                <span class="text-cyberBlue font-black" x-text="ex.sets + 'S × ' + ex.reps + 'R @ ' + ex.weight + 'kg'"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">🍱 Food Synthesis Timeline</p>
+                                    <div class="space-y-2">
+                                        <template x-for="(meal, index) in log.meals">
+                                            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-pulsePurple font-black" x-text="'M' + (index + 1)"></span>
+                                                    <span class="text-slate-400 font-medium text-[10px]" x-text="'[' + meal.time + ']'"></span>
+                                                    <span class="font-bold" x-text="meal.name"></span>
+                                                </div>
+                                                <span class="text-pulsePurple font-bold" x-text Alpine.raw(meal.calories) ? meal.calories + ' kcal' : '0 kcal'></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Session Insights</p>
+                                <p class="text-xs text-slate-500 italic" x-text="log.comments || 'No supplementary operational data compiled.'"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div x-show="showModal" x-cloak class="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md">
+        <div @click.away="showModal = false" class="bg-white dark:bg-slatePanel w-full max-w-6xl max-h-[92vh] overflow-hidden rounded-[3rem] shadow-2xl flex flex-col border border-slate-200 dark:border-slate-800">
+            
+            <div class="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20">
+                <div>
+                    <h2 class="text-3xl font-black italic uppercase tracking-tighter" x-text="isEditing ? 'Modify Synced Metrics' : 'Initialize Performance Entry'"></h2>
+                    <p class="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Local Data Node Logging Engine</p>
+                </div>
+                <button @click="showModal = false" class="text-xs bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-4 py-2 rounded-xl font-bold tracking-widest hover:text-red-500">ABORT</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-8 lg:p-10 space-y-10 no-scrollbar">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    
+                    <div class="space-y-6">
+                        <p class="text-cyberBlue font-black text-[11px] uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">1. Macro Bounds & Cardio</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="date" x-model="form.date" class="w-full p-3 rounded-xl text-sm">
+                                <input type="time" x-model="form.workoutTime" class="w-full p-3 rounded-xl text-sm">
+                            </div>
+                            <input type="text" placeholder="Session Identifier (e.g. Pull A)" x-model="form.workoutName" class="w-full p-3 rounded-xl text-sm">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">WEIGHT (KG)</label><input type="number" step="0.1" x-model="form.weight" class="w-full p-3 rounded-xl text-center"></div>
+                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">WAIST (IN)</label><input type="number" step="0.1" x-model="form.waist" class="w-full p-3 rounded-xl text-center"></div>
+                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">SLEEP (HR)</label><input type="number" step="0.5" x-model="form.sleep" class="w-full p-3 rounded-xl text-center"></div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                            <p class="text-neonGreen font-black text-[11px] uppercase tracking-widest">Cardio Profile Parameters</p>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">TIME (MIN)</label><input type="number" x-model="form.cardio.time" class="w-full p-3 rounded-xl text-center"></div>
+                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">SPEED (KPH)</label><input type="number" step="0.1" x-model="form.cardio.speed" class="w-full p-3 rounded-xl text-center"></div>
+                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">INCLINE %</label><input type="number" step="0.5" x-model="form.cardio.incline" class="w-full p-3 rounded-xl text-center"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <p class="text-cyan-400 font-black text-[11px] uppercase tracking-widest">2. Strength Load Configuration</p>
+                            <button @click="addExerciseRow()" class="text-[10px] bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-full font-bold hover:bg-cyan-500 hover:text-white transition-all">+ ADD MOVE</button>
+                        </div>
+                        <div class="flex flex-col gap-4 w-full">
+                            <template x-for="(ex, index) in form.exercises" :key="index">
+                                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 relative">
+                                    <button @click="form.exercises.splice(index, 1)" class="absolute top-3 right-3 text-red-500 font-bold text-xs">REMOVE</button>
+                                    <input type="text" placeholder="Movement Identity" x-model="ex.name" class="w-full bg-transparent border-b border-slate-300 dark:border-slate-800 pb-2 text-sm outline-none font-bold">
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div><span class="text-[9px] text-slate-400 block mb-1 text-center">SETS</span><input type="number" x-model="ex.sets" class="w-full p-2 text-center rounded-lg text-xs"></div>
+                                        <div><span class="text-[9px] text-slate-400 block mb-1 text-center">REPS</span><input type="number" x-model="ex.reps" class="w-full p-2 text-center rounded-lg text-xs"></div>
+                                        <div><span class="text-[9px] text-cyberBlue block mb-1 text-center">KG</span><input type="number" step="0.5" x-model="ex.weight" class="w-full p-2 text-center rounded-lg text-xs font-bold text-cyberBlue"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <p class="text-pulsePurple font-black text-[11px] uppercase tracking-widest">3. Food Item Allocation</p>
+                            <button @click="addMealRow()" class="text-[10px] bg-purple-500/10 text-pulsePurple px-4 py-2 rounded-full font-bold hover:bg-pulsePurple hover:text-white transition-all">+ ADD MEAL</button>
+                        </div>
+                        <div class="flex flex-col gap-3 w-full">
+                            <template x-for="(meal, index) in form.meals" :key="index">
+                                <div class="flex flex-col gap-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative">
+                                    <button @click="form.meals.splice(index, 1)" class="absolute top-2 right-3 text-red-500 text-[10px] font-bold">WIPE</button>
+                                    <div class="flex gap-2 items-center">
+                                        <span class="text-[10px] font-black text-pulsePurple uppercase" x-text="'MEAL ' + (index + 1)"></span>
+                                        <input type="time" x-model="meal.time" class="p-1.5 rounded-lg text-[11px] text-center w-24">
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <input type="text" placeholder="Macronutrient content" x-model="meal.name" class="col-span-2 p-2 rounded-lg text-xs">
+                                        <input type="number" placeholder="Calories" x-model="meal.calories" class="p-2 rounded-lg text-xs font-bold text-pulsePurple text-center">
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <p class="text-slate-400 font-bold text-[10px] uppercase mb-2">Supplemental Operational Commentary</p>
+                            <textarea x-model="form.comments" class="w-full p-4 rounded-2xl h-24 resize-none text-xs" placeholder="Log cognitive states, pre-workout efficiency parameters, or physical anomalies..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                <button @click="saveEntry()" class="w-full bg-cyberBlue hover:bg-blue-600 py-5 font-black text-xl text-white uppercase tracking-[0.2em] shadow-2xl transition-all transform active:scale-95">
+                    COMMIT LOG ENTRY TO VAULT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-only hidden">
+        <h2 class="text-2xl font-black uppercase mb-2">FORGEPATH ATHLETE PERFORMANCE MATRIX</h2>
+        <p class="text-xs font-bold mb-4">TARGET BIO-MASS: <span x-text="targets.weight + ' KG'"></span> | DAILY KCAL CEILING: <span x-text="targets.calories + ' KCAL'"></span></p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Temporal Node</th>
+                    <th>Mass Axis</th>
+                    <th>Waist Axis</th>
+                    <th>Sleep Latency</th>
+                    <th>Energy Ingested</th>
+                    <th>Strength Load Specifications</th>
+                    <th>Nutritional Logistics</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="log in getFilteredLogs()">
+                    <tr>
+                        <td x-text="log.date + ' @ ' + log.workoutTime" class="font-bold"></td>
+                        <td x-text="log.weight + ' kg'"></td>
+                        <td x-text="log.waist + ' in'"></td>
+                        <td x-text="log.sleep + ' hrs'"></td>
+                        <td x-text="calculateLogCalories(log) + ' kcal'"></td>
+                        <td>
+                            <template x-for="ex in log.exercises">
+                                <div x-text="ex.name + ' [' + ex.sets + 'Sx' + ex.reps + 'R @' + ex.weight + 'kg]'"></div>
+                            </template>
+                        </td>
+                        <td>
+                            <template x-for="(meal, index) in log.meals">
+                                <div x-text="'M' + (index+1) + ' (' + meal.time + '): ' + meal.name + ' - ' + meal.calories + 'kcal'"></div>
+                            </template>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function gymApp() {
+            return {
+                theme: localStorage.getItem('fpTheme') || 'dark',
+                showModal: false,
+                isEditing: false,
+                editId: null,
+                filterStart: '',
+                filterEnd: new Date().toISOString().split('T')[0],
+                targets: JSON.parse(localStorage.getItem('forgePathTargets')) || { days: 90, weight: 65, calories: 2500 },
+                logs: JSON.parse(localStorage.getItem('forgePathUltimateLogs_v5')) || [],
+                form: { date: '', workoutTime: '', workoutName: '', weight: '', waist: '', sleep: '', cardio: {time:'', speed:'', incline:''}, exercises: [], meals: [], comments: '' },
+
+                initApp() {
+                    const d = new Date(); d.setDate(d.getDate() - 14);
+                    this.filterStart = d.toISOString().split('T')[0];
+                    this.initCharts();
+                    this.$watch('logs', () => { this.persist(); this.initCharts(); });
+                },
+                toggleTheme() {
+                    this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                    localStorage.setItem('fpTheme', this.theme);
+                    setTimeout(() => this.initCharts(), 40);
+                },
+                openNewModal() {
+                    this.isEditing = false;
+                    this.resetForm();
+                    this.form.date = new Date().toISOString().split('T')[0];
+                    this.form.workoutTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                    this.showModal = true;
+                },
+                addExerciseRow() { this.form.exercises.push({ name: '', sets: '', reps: '', weight: '' }); },
+                addMealRow() { this.form.meals.push({ name: '', time: '00:00', calories: '' }); },
+                calculateLogCalories(log) {
+                    if(!log.meals) return 0;
+                    return log.meals.reduce((sum, m) => sum + (parseInt(m.calories) || 0), 0);
+                },
+                saveEntry() {
+                    if (this.isEditing) {
+                        const idx = this.logs.findIndex(l => l.id === this.editId);
+                        this.logs[idx] = JSON.parse(JSON.stringify({ ...this.form, id: this.editId }));
+                    } else {
+                        this.logs.unshift(JSON.parse(JSON.stringify({ ...this.form, id: Date.now() })));
+                    }
+                    this.persist();
+                    this.showModal = false;
+                },
+                editEntry(log) {
+                    this.isEditing = true;
+                    this.editId = log.id;
+                    this.form = JSON.parse(JSON.stringify(log));
+                    this.showModal = true;
+                },
+                deleteEntry(id) {
+                    if (confirm('Execute permanent data deletion sequence?')) {
+                        this.logs = this.logs.filter(l => l.id !== id);
+                        this.persist();
+                    }
+                },
+                saveTargets() {
+                    localStorage.setItem('forgePathTargets', JSON.stringify(this.targets));
+                    this.initCharts();
+                },
+                persist() {
+                    this.logs.sort((a,b) => new Date(b.date) - new Date(a.date));
+                    localStorage.setItem('forgePathUltimateLogs_v5', JSON.stringify(this.logs));
+                },
+                getFilteredLogs() {
+                    return this.logs.filter(log => log.date >= this.filterStart && log.date <= this.filterEnd);
+                },
+                formatDate(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); },
+                initCharts() {
+                    const isDark = this.theme === 'dark';
+                    const txtColor = isDark ? '#94a3b8' : '#64748b';
+                    const gridColor = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+                    const sorted = [...this.logs].reverse().slice(-14);
+                    const labels = sorted.map(l => this.formatDate(l.date));
+
+                    if (window.cW) window.cW.destroy();
+                    if (window.cWa) window.cWa.destroy();
+                    if (window.cCal) window.cCal.destroy();
+
+                    const buildChart = (ctx, label, data, color, targetVal) => {
+                        const datasets = [{ label, data, borderColor: color, tension: 0.4, fill: true, backgroundColor: color+'11', pointRadius: 4 }];
+                        if(targetVal) {
+                            datasets.push({ label: 'Objective Threshold', data: Array(labels.length).fill(targetVal), borderColor: '#ef4444', borderDash: [6, 6], pointRadius: 0, fill: false });
+                        }
+                        return new Chart(ctx, {
+                            type: 'line',
+                            data: { labels, datasets },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: txtColor } }, x: { grid: { display: false }, ticks: { color: txtColor } } } }
+                        });
+                    };
+
+                    window.cW = buildChart(document.getElementById('chartW'), 'Mass Trajectory', sorted.map(l => l.weight), '#3b82f6', this.targets.weight);
+                    window.cWa = buildChart(document.getElementById('chartWaist'), 'Waist Axis', sorted.map(l => l.waist), '#10b981');
+                    window.cCal = buildChart(document.getElementById('Energy Index'), 'Caloric Intake', sorted.map(l => this.calculateLogCalories(l)), '#8b5cf6', this.targets.calories);
+                },
+                exportCSV() {
+                    let csv = 'Date,Time,WorkoutName,Weight,Waist,Sleep,TotalCalories,Exercises\n';
+                    this.logs.forEach(l => {
+                        const exStr = l.exercises.map(e => `${e.name}(${e.sets}Sx${e.reps}R@${e.weight}kg)`).join(' | ');
+                        csv += `${l.date},${l.workoutTime},${l.workoutName},${l.weight},${l.waist},${l.sleep},${this.calculateLogCalories(l)},"${exStr}"\n`;
+                    });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                    link.download = `ForgePath_Matrix_Data.csv`;
+                    link.click();
+                },
+                resetForm() { this.form = { date: '', workoutTime: '', workoutName: '', weight: '', waist: '', sleep: '', cardio: {time:'', speed:'', incline:''}, exercises: [], meals: [], comments: '' }; }
+            }
+        }
+    </script>
+</body>
+</html>
