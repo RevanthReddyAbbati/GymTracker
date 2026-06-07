@@ -20,10 +20,13 @@
                         brand: {
                             50: '#f0f7ff',
                             100: '#e0effe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8'
-                        }
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af'
+                        },
+                        cyberDark: '#020617',
+                        panelDark: '#0b1329',
+                        inputDark: '#111c44'
                     }
                 }
             }
@@ -34,73 +37,99 @@
     
     <style>
         [x-cloak] { display: none !important; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Plus Jakarta Sans', 'sans-serif'; transition: background-color 0.3s, color 0.3s; }
         
-        /* Layout Scrollbar Management */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        .dark ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-        
-        /* Deep Component Forms Isolation Architecture */
+        /* STRICT GLOBAL RESETS: Permanently kills browser default white boxes on inputs */
         input, select, textarea {
-            background-color: #ffffff !important;
+            background-color: #f8fafc !important;
             color: #0f172a !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            width: 100% !important;
+            outline: none !important;
+            appearance: none !important;
+            transition: all 0.2s ease-in-out;
         }
+        
         .dark input, .dark select, .dark textarea {
             background-color: #0f172a !important;
             color: #f8fafc !important;
             border: 1px solid #1e293b !important;
         }
+
         input:focus, select:focus, textarea:focus {
-            outline: none !important;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
         }
+
+        /* Standardize Picker Indicator Arrows/Icons across browsers */
         input::-webkit-calendar-picker-indicator {
             filter: invert(0);
+            opacity: 0.5;
             cursor: pointer;
         }
         .dark input::-webkit-calendar-picker-indicator {
             filter: invert(1);
+            opacity: 0.7;
         }
-        
-        /* Grid Layout Extensions */
-        .grid-rows-7 { grid-template-rows: repeat(7, minmax(0, 1fr)); }
-        
+
+        /* Clean utilities */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(30, 41, 59, 0.5);
+        }
+
+        /* Layout Fixes: Completely prevents flex item collisions and card overlapping */
+        .dynamic-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            width: 100%;
+        }
+
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background: white !important; color: black !important; padding: 0 !important; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; color: black !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #000 !important; padding: 8px !important; text-align: left !important; color: black !important; }
         }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col md:flex-row overflow-x-hidden" x-data="ascendraApp()" x-init="initEngine()">
+<body class="bg-slate-50 dark:bg-cyberDark text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col md:flex-row overflow-x-hidden" x-data="ascendraEngine()">
 
-    <div x-show="showOnboarding" x-cloak class="fixed inset-0 z-[200] bg-slate-50 dark:bg-slate-950 overflow-y-auto p-4 md:p-12 flex flex-col items-center justify-center">
-        <div class="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 md:p-12 rounded-[2.5rem] shadow-2xl space-y-8">
-            <div class="text-center">
+    <div x-show="showWizard" x-cloak class="fixed inset-0 z-[200] bg-slate-100 dark:bg-cyberDark overflow-y-auto p-4 md:p-12 flex flex-col items-center justify-center">
+        <div class="w-full max-w-4xl bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-8 md:p-12 rounded-[2.5rem] shadow-2xl space-y-8 animate-in fade-in duration-300">
+            <div class="text-center space-y-2">
                 <h1 class="text-4xl font-extrabold tracking-tighter text-brand-500 italic">ASCENDRA</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Build Better Every Day.</p>
-                <div class="h-1 w-20 bg-brand-500 mx-auto mt-4 rounded-full"></div>
+                <p class="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Build Better Every Day.</p>
+                <div class="h-1 w-16 bg-brand-500 mx-auto rounded-full mt-4"></div>
             </div>
 
-            <form @submit.preventDefault="submitOnboarding()" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">YOUR FULL NAME</label>
-                        <input type="text" x-model="onboardForm.name" required class="w-full p-3 rounded-xl text-sm" placeholder="Athlete">
+            <form @submit.preventDefault="processOnboarding()" class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">User Name</label>
+                        <input type="text" x-model="wizard.name" required placeholder="Enter name">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">AGE</label>
-                        <input type="number" x-model="onboardForm.age" required class="w-full p-3 rounded-xl text-sm" placeholder="25">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Age (Years)</label>
+                        <input type="number" x-model="wizard.age" required placeholder="e.g. 25">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">GENDER</label>
-                        <select x-model="onboardForm.gender" class="w-full p-3 rounded-xl text-sm">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Biological Gender</label>
+                        <select x-model="wizard.gender" class="cursor-pointer">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                             <option value="Non-Binary">Non-Binary</option>
@@ -108,244 +137,237 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">HEIGHT (CM)</label>
-                        <input type="number" x-model="onboardForm.height" required class="w-full p-3 rounded-xl text-sm" placeholder="175">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Height (cm)</label>
+                        <input type="number" x-model="wizard.height" required placeholder="e.g. 175">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">CURRENT WEIGHT (KG)</label>
-                        <input type="number" step="0.1" x-model="onboardForm.currentWeight" required class="w-full p-3 rounded-xl text-sm" placeholder="75.0">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Current Weight (kg)</label>
+                        <input type="number" step="0.1" x-model="wizard.currentWeight" required placeholder="e.g. 75.0">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">BODY FAT %</label>
-                        <input type="number" step="0.1" x-model="onboardForm.currentBodyFat" required class="w-full p-3 rounded-xl text-sm" placeholder="18.0">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Body Fat %</label>
+                        <input type="number" step="0.1" x-model="wizard.currentBodyFat" required placeholder="e.g. 15.0">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">ACTIVITY LEVEL</label>
-                        <select x-model="onboardForm.activityLevel" class="w-full p-3 rounded-xl text-sm">
-                            <option value="Sedentary">Sedentary</option>
-                            <option value="Lightly Active">Lightly Active</option>
-                            <option value="Moderately Active">Moderately Active</option>
-                            <option value="Very Active">Very Active</option>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Daily Activity Factor</label>
+                        <select x-model="wizard.activityLevel" class="cursor-pointer">
+                            <option value="Sedentary">Sedentary (Office Desk Job)</option>
+                            <option value="Lightly Active">Lightly Active (1-3 Days/Wk Training)</option>
+                            <option value="Moderately Active">Moderately Active (3-5 Days/Wk Training)</option>
+                            <option value="Very Active">Very Active (Heavy Daily Training Loads)</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">TARGET WEIGHT (KG)</label>
-                        <input type="number" step="0.1" x-model="onboardForm.targetWeight" required class="w-full p-3 rounded-xl text-sm" placeholder="70.0">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-slate-100 dark:border-slate-800/80 pt-6">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Target Weight (kg)</label>
+                        <input type="number" step="0.1" x-model="wizard.targetWeight" required placeholder="e.g. 70.0">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">TARGET BODY FAT %</label>
-                        <input type="number" step="0.1" x-model="onboardForm.targetBodyFat" required class="w-full p-3 rounded-xl text-sm" placeholder="12.0">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Target Body Fat %</label>
+                        <input type="number" step="0.1" x-model="wizard.targetBodyFat" required placeholder="e.g. 11.0">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">TARGET EXECUTION DATE</label>
-                        <input type="date" x-model="onboardForm.targetDate" required class="w-full p-3 rounded-xl text-xs">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block uppercase">Target Completion Date</label>
+                        <input type="date" x-model="wizard.targetDate" required>
                     </div>
                 </div>
 
                 <div class="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">Select Active Training Objectives (Select Multiple)</p>
+                    <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">Select All Active Core System Goals</p>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                        <template x-for="goalOpt in predefinedGoals">
-                            <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer select-none text-xs font-semibold">
-                                <input type="checkbox" :value="goalOpt" x-model="onboardForm.goals" class="rounded text-brand-500 focus:ring-brand-500 h-4 w-4">
-                                <span x-text="goalOpt"></span>
+                        <template x-for="goal in goalOptions">
+                            <label class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer select-none text-xs font-bold transition-all hover:border-brand-500/50">
+                                <input type="checkbox" :value="goal" x-model="wizard.goals" class="rounded border-slate-300 text-brand-500 focus:ring-brand-500 h-4 w-4">
+                                <span x-text="goal"></span>
                             </label>
                         </template>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-2xl text-xs tracking-widest uppercase shadow-xl shadow-brand-500/10 transition-transform active:scale-98">
-                    Initialize System Core Engine
+                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-4 rounded-2xl text-xs tracking-widest uppercase transition-all shadow-xl shadow-brand-500/20 transform active:scale-[0.99]">
+                    Initialize Core Ecosystem Node
                 </button>
             </form>
         </div>
     </div>
 
-    <aside class="no-print hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 shrink-0 h-screen sticky top-0 z-30">
+    <aside class="no-print hidden md:flex flex-col w-72 bg-white dark:bg-panelDark border-r border-slate-200 dark:border-slate-800/80 p-6 shrink-0 h-screen sticky top-0 z-30">
         <div class="flex items-center gap-3 mb-8">
             <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-brand-500/20">A</div>
             <div>
                 <h1 class="text-xl font-black tracking-tighter uppercase leading-none">ASCENDRA</h1>
-                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase mt-0.5">Build Better Every Day.</p>
+                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase mt-0.5">Performance OS</p>
             </div>
         </div>
 
         <nav class="space-y-1 flex-1">
-            <button @click="switchTab('dashboard')" :class="activeTab === 'dashboard' ? 'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
-                Dashboard
+            <button @click="switchNavigationTab('dashboard')" :class="activeTab === 'dashboard' ? 'bg-brand-50 text-brand-500 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
+                Summary Dashboard
             </button>
-            <button @click="switchTab('workouts')" :class="activeTab === 'workouts' ? 'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2a2.5 2.5 0 002.5-2.5V6.586M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
-                Workouts
+            <button @click="switchNavigationTab('workouts')" :class="activeTab === 'workouts' ? 'bg-brand-50 text-brand-500 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
+                Workout Logging
             </button>
-            <button @click="switchTab('diet')" :class="activeTab === 'diet' ? 'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
-                Diet Tracking
+            <button @click="switchNavigationTab('diet')" :class="activeTab === 'diet' ? 'bg-brand-50 text-brand-500 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
+                Diet Module
             </button>
-            <button @click="switchTab('photos')" :class="activeTab === 'photos' ? 'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Progress Photos
+            <button @click="switchNavigationTab('photos')" :class="activeTab === 'photos' ? 'bg-brand-50 text-brand-500 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
+                Visual Vault
             </button>
-            <button @click="switchTab('reports')" :class="activeTab === 'reports' ? 'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 2v-6m-8 9h10a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <button @click="switchNavigationTab('reports')" :class="activeTab === 'reports' ? 'bg-brand-50 text-brand-500 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
                 Report Center
             </button>
-            <button @click="switchTab('system')" :class="activeTab === 'system' ? 'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                System Panel
+            <button @click="switchNavigationTab('system')" :class="activeTab === 'system' ? 'bg-brand-50 text-brand-500 dark:bg-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all">
+                System Registry
             </button>
         </nav>
 
-        <div class="mt-auto space-y-2">
-            <button @click="openModal('logDay')" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-xl text-xs tracking-wider uppercase transition-all shadow-lg shadow-brand-500/10">
+        <div class="mt-auto space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+            <button @click="openModalWindow('modalDay')" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-3.5 px-4 rounded-xl text-xs tracking-widest uppercase transition-all shadow-lg shadow-brand-500/10">
                 Log Metrics
             </button>
-            <button @click="openModal('logWorkout')" class="w-full border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold py-3 px-4 rounded-xl text-xs tracking-wider uppercase transition-all">
+            <button @click="openModalWindow('modalWorkout')" class="w-full border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold py-3.5 px-4 rounded-xl text-xs tracking-widest uppercase transition-all">
                 Track Workout
             </button>
         </div>
     </aside>
 
-    <header class="no-print md:hidden flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-30 shadow-sm">
+    <header class="no-print md:hidden flex justify-between items-center bg-white dark:bg-panelDark border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-30 shadow-sm">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-black italic text-sm">A</div>
-            <h1 class="text-base font-black uppercase tracking-tight">ASCENDRA</h1>
+            <h1 class="text-sm font-black uppercase tracking-tight">ASCENDRA</h1>
         </div>
         <div class="flex gap-2">
-            <button @click="openModal('logDay')" class="bg-brand-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md shadow-brand-500/10">Log</button>
-            <button @click="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
+            <button @click="openModalWindow('modalDay')" class="bg-brand-500 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md">Log</button>
+            <button @click="toggleGlobalInterfaceTheme()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
                 <svg x-show="theme === 'light'" class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 <svg x-show="theme === 'dark'" class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
             </button>
         </div>
     </header>
 
-    <nav class="no-print md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-3 z-40 shadow-xl">
-        <button @click="switchTab('dashboard')" :class="activeTab === 'dashboard' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
-            <span class="text-[10px] font-bold mt-1">Summary</span>
+    <nav class="no-print md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-panelDark border-t border-slate-200 dark:border-slate-800 flex justify-around py-2.5 z-40 shadow-2xl">
+        <button @click="switchNavigationTab('dashboard')" :class="activeTab === 'dashboard' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
+            <span class="text-[10px] font-black uppercase tracking-wider">Summary</span>
         </button>
-        <button @click="switchTab('workouts')" :class="activeTab === 'workouts' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2a2.5 2.5 0 002.5-2.5V6.586M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
-            <span class="text-[10px] font-bold mt-1">Gym</span>
+        <button @click="switchNavigationTab('workouts')" :class="activeTab === 'workouts' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
+            <span class="text-[10px] font-black uppercase tracking-wider">Gym</span>
         </button>
-        <button @click="switchTab('diet')" :class="activeTab === 'diet' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
-            <span class="text-[10px] font-bold mt-1">Diet</span>
+        <button @click="switchNavigationTab('diet')" :class="activeTab === 'diet' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
+            <span class="text-[10px] font-black uppercase tracking-wider">Diet</span>
         </button>
-        <button @click="switchTab('photos')" :class="activeTab === 'photos' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span class="text-[10px] font-bold mt-1">Photos</span>
+        <button @click="switchNavigationTab('photos')" :class="activeTab === 'photos' ? 'text-brand-500' : 'text-slate-400'" class="flex flex-col items-center">
+            <span class="text-[10px] font-black uppercase tracking-wider">Vault</span>
         </button>
     </nav>
 
-    <main class="flex-1 overflow-y-auto h-screen p-4 md:p-8 lg:p-10 pb-24 md:pb-8">
-        
-        <div x-show="activeTab === 'dashboard'" x-cloak class="space-y-8">
+    <main class="flex-1 overflow-y-auto h-screen p-4 md:p-8 lg:p-12 pb-24 md:pb-12 no-scrollbar no-print">
+
+        <div x-show="activeTab === 'dashboard'" x-cloak class="space-y-8 animate-in fade-in duration-200">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                     <h2 class="text-3xl font-extrabold tracking-tight">Today's Summary</h2>
-                    <p class="text-sm text-slate-500" x-text="getFormattedDate()"></p>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1" x-text="getFormattedCalendarDate()"></p>
                 </div>
-                <button @click="toggleTheme()" class="no-print hidden md:block p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <svg x-show="theme === 'light'" class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    <svg x-show="theme === 'dark'" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
+                <button @click="toggleGlobalInterfaceTheme()" class="no-print hidden md:block p-3 rounded-xl bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <svg x-show="theme === 'light'" class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <svg x-show="theme === 'dark'" class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
                 </button>
             </div>
 
-            <div class="p-5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-brand-500/20 flex items-center justify-center text-brand-500 font-bold shrink-0">AI</div>
-                    <div>
-                        <h4 class="text-sm font-bold tracking-tight">Analytical Observations</h4>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed" x-text="computedMetrics.aiInsights"></p>
-                    </div>
+            <div class="p-6 rounded-[2rem] bg-gradient-to-br from-brand-500/10 via-purple-500/5 to-transparent border border-brand-500/20 flex gap-4 items-start">
+                <div class="w-10 h-10 rounded-2xl bg-brand-500/20 flex items-center justify-center text-brand-500 font-bold shrink-0">AI</div>
+                <div class="space-y-1">
+                    <h4 class="text-xs font-black uppercase tracking-widest text-slate-400">Dynamic AI Diagnostic Data</h4>
+                    <p class="text-xs text-slate-500 dark:text-slate-300 leading-relaxed font-medium" x-text="metrics.aiInsights"></p>
                 </div>
             </div>
 
-            <div x-show="logs.length === 0 && workouts.length === 0" class="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl space-y-3">
-                <h3 class="text-lg font-bold">No Metrics Recorded</h3>
-                <p class="text-sm text-slate-500 max-w-sm mx-auto">Your application core is initialized. Select "Log Metrics" or "Track Workout" to build your data timeline history maps.</p>
+            <div x-show="logs.length === 0 && workouts.length === 0" class="p-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] space-y-4 bg-white dark:bg-panelDark/40">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center mx-auto text-slate-400">!</div>
+                <h3 class="text-lg font-bold">Ecosystem Initialized: Empty Pipeline</h3>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">No tracking vectors logged yet. Utilize the logging triggers below or on the side navigation deck to deploy your data records.</p>
+                <div class="flex justify-center gap-3 pt-2">
+                    <button @click="openModalWindow('modalDay')" class="bg-brand-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-brand-500/10">Log Vitals</button>
+                    <button @click="openModalWindow('modalWorkout')" class="border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-xl text-xs font-bold">Track Lift</button>
+                </div>
             </div>
 
             <div x-show="logs.length > 0 || workouts.length > 0" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Weight Progress</span>
-                    <h3 class="text-2xl font-black mt-1" x-text="computedMetrics.latestWeight ? computedMetrics.latestWeight + ' kg' : 'Awaiting Data'"></h3>
-                    <p class="text-[10px] text-slate-400 mt-1" x-text="'Goal Target: ' + profile.targetWeight + ' kg'"></p>
+                <div class="glass-panel p-6 rounded-3xl shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Current Weight</span>
+                    <h3 class="text-3xl font-black mt-1" x-text="metrics.currentWeight ? metrics.currentWeight + ' kg' : '--'"></h3>
+                    <p class="text-[10px] text-slate-400 mt-2" x-text="'Target Metric: ' + (profile ? profile.targetWeight : 0) + ' kg'"></p>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Goal Completion</span>
-                    <h3 class="text-2xl font-black mt-1" x-text="computedMetrics.goalCompletionPercent + '%'"></h3>
-                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
-                        <div class="bg-brand-500 h-full transition-all duration-500" :style="`width: ${computedMetrics.goalCompletionPercent}%`"></div>
+                <div class="glass-panel p-6 rounded-3xl shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Goal Success Probability</span>
+                    <h3 class="text-3xl font-black mt-1 text-emerald-500" x-text="metrics.goalCompletionPercent + '%'"></h3>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full mt-3 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all duration-500" :style="`width: ${metrics.goalCompletionPercent}%`"></div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Timeline Remaining</span>
-                    <h3 class="text-2xl font-black mt-1" x-text="computedMetrics.daysRemaining + ' Days'"></h3>
-                    <p class="text-[10px] text-slate-400 mt-1" x-text="'Target Date: ' + profile.targetDate"></p>
+                <div class="glass-panel p-6 rounded-3xl shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Timeline Status</span>
+                    <h3 class="text-3xl font-black mt-1" x-text="metrics.daysRemaining + ' Days'"></h3>
+                    <p class="text-[10px] text-slate-400 mt-2" x-text="'Target Date: ' + (profile ? profile.targetDate : '--')"></p>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Consistency Record</span>
-                    <h3 class="text-2xl font-black mt-1" x-text="computedMetrics.consistencyScore + '%'"></h3>
-                    <p class="text-[10px] text-slate-400 mt-1" x-text="'Current Streak: ' + computedMetrics.streakCurrent + ' Days'"></p>
+                <div class="glass-panel p-6 rounded-3xl shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Ecosystem Consistency</span>
+                    <h3 class="text-3xl font-black mt-1 text-brand-500" x-text="metrics.consistencyScore + '%'"></h3>
+                    <p class="text-[10px] text-slate-400 mt-2" x-text="'Current Run Streak: ' + metrics.streakCurrent + ' Days'"></p>
                 </div>
             </div>
 
             <div x-show="logs.length > 0 || workouts.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-80">
-                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Weight Trend Tracker</p>
-                    <div class="h-64 relative"><canvas id="canvas-weight-dash"></canvas></div>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800/80 p-6 rounded-[2rem] h-80">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">Bodyweight Logs Timeline</p>
+                    <div class="h-64 relative"><canvas id="canvas-dash-weight"></canvas></div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-80">
-                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Calories & Energy Ranges</p>
-                    <div class="h-64 relative"><canvas id="canvas-calories-dash"></canvas></div>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800/80 p-6 rounded-[2rem] h-80">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">Caloric Energy Load Trends</p>
+                    <div class="h-64 relative"><canvas id="canvas-dash-calories"></canvas></div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
+            <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800/80 p-6 rounded-[2rem] space-y-4">
                 <div>
-                    <h3 class="text-base font-extrabold tracking-tight">Consistency Tracker</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500">Every single date record populated logs an operational parameter mark into the tracking grid below.</p>
+                    <h3 class="text-base font-black uppercase tracking-tight italic">Ecosystem Log Map</h3>
+                    <p class="text-xs text-slate-400">Visual tracking matrix map showing the calendar logs contribution over time metrics history blocks.</p>
                 </div>
                 <div class="overflow-x-auto no-scrollbar pt-2">
-                    <div class="min-w-[720px] flex flex-col gap-1" id="heatmap-grid-root">
+                    <div class="min-w-[720px] flex flex-col gap-1" id="heatmap-grid-anchor">
                         </div>
                 </div>
             </div>
 
             <div x-show="logs.length > 0 || workouts.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                    <h3 class="text-base font-extrabold tracking-tight">Recent Exercise Tracks</h3>
-                    <div class="divide-y divide-slate-100 dark:divide-slate-800 space-y-3" id="dash-feed-workouts">
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800/80 p-6 rounded-[2rem] space-y-4">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-400">Recent Resistance Tracks</h3>
+                    <div class="dynamic-stack divide-y divide-slate-100 dark:divide-slate-800" id="dash-feed-w">
                         <template x-for="w in workouts.slice(0, 3)">
                             <div class="pt-3 flex justify-between items-center text-xs">
                                 <div>
-                                    <span class="font-bold block" x-text="w.name"></span>
-                                    <span class="text-slate-400" x-text="w.date + ' • Primary: ' + w.primaryGroup"></span>
+                                    <span class="font-extrabold block uppercase" x-text="w.name"></span>
+                                    <span class="text-slate-400 font-medium" x-text="w.date + ' • Focus: ' + w.primaryGroup"></span>
                                 </div>
-                                <span class="text-brand-500 font-black bg-brand-500/10 px-2 py-1 rounded" x-text="w.sets.length + ' Sets Logged'"></span>
+                                <span class="bg-brand-500/10 text-brand-500 font-black px-2.5 py-1 rounded-lg" x-text="w.sets.length + ' Sets logged'"></span>
                             </div>
                         </template>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                    <h3 class="text-base font-extrabold tracking-tight">Recent Nutrition Tracks</h3>
-                    <div class="divide-y divide-slate-100 dark:divide-slate-800 space-y-3" id="dash-feed-diet">
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800/80 p-6 rounded-[2rem] space-y-4">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-400">Recent Diet Data Syncs</h3>
+                    <div class="dynamic-stack divide-y divide-slate-100 dark:divide-slate-800" id="dash-feed-n">
                         <template x-for="l in logs.slice(0, 3)">
                             <div class="pt-3 flex justify-between items-center text-xs">
                                 <div>
-                                    <span class="font-bold block" x-text="l.calories + ' Calories Logged'"></span>
-                                    <span class="text-slate-400" x-text="l.date + ' • Protein: ' + l.protein + 'g'"></span >
+                                    <span class="font-extrabold block" x-text="l.calories + ' kcal Consumed'"></span>
+                                    <span class="text-slate-400 font-medium" x-text="l.date + ' • Protein target asset: ' + l.protein + 'g'"></span>
                                 </div>
-                                <span class="text-slate-400 font-medium" x-text="l.water + ' ml Water'"></span>
+                                <span class="text-slate-400 font-bold" x-text="l.water + ' ml Hydration'"></span>
                             </div>
                         </template>
                     </div>
@@ -353,31 +375,31 @@
             </div>
         </div>
 
-        <div x-show="activeTab === 'workouts'" x-cloak class="space-y-8">
+        <div x-show="activeTab === 'workouts'" x-cloak class="space-y-8 animate-in fade-in duration-200">
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-3xl font-extrabold tracking-tight">Workouts</h2>
-                    <p class="text-sm text-slate-500">Track resistance training and progressive volume thresholds.</p>
+                    <p class="text-sm text-slate-500">Track dynamic lifting progression and personal structural records variables.</p>
                 </div>
-                <button @click="openModal('logWorkout')" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md">Record Session</button>
+                <button @click="openModalWindow('logWorkout')" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md">Record Session</button>
             </div>
 
-            <div x-show="workouts.length === 0" class="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-sm text-slate-400">
-                No session volume records mapped yet. Track a workout item sequence to activate telemetry.
+            <div x-show="workouts.length === 0" class="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-xs text-slate-400">
+                No resistance training parameters logged inside the system memory nodes currently. Log a gym set schema.
             </div>
 
             <div x-show="workouts.length > 0" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-64 lg:col-span-2">
-                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Total Lift Volume Progress</p>
-                    <div class="h-48 relative"><canvas id="canvas-volume-track"></canvas></div>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] h-66 lg:col-span-2 shadow-sm">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Lift Volume Progress Metrics</p>
+                    <div class="h-48 relative"><canvas id="canvas-volume-progression"></canvas></div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between shadow-sm">
                     <div>
-                        <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Personal Records Matrix</p>
+                        <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">Personal Best Records Ledger</p>
                         <div class="space-y-2 max-h-44 overflow-y-auto no-scrollbar">
-                            <template x-for="pr in computedMetrics.personalRecords">
+                            <template x-for="pr in metrics.personalRecords">
                                 <div class="flex justify-between items-center text-xs bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                                    <span class="font-bold uppercase tracking-tight" x-text="pr.name"></span>
+                                    <span class="font-extrabold uppercase tracking-tight" x-text="pr.name"></span>
                                     <span class="font-black text-brand-500" x-text="pr.weight + ' kg'"></span>
                                 </div>
                             </template>
@@ -386,30 +408,30 @@
                 </div>
             </div>
 
-            <div x-show="workouts.length > 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+            <div x-show="workouts.length > 0" class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold text-xs">
                                 <th class="p-4">Date</th>
-                                <th class="p-4">Exercise</th>
-                                <th class="p-4">Primary Target</th>
-                                <th class="p-4 text-center">Sets Completed</th>
-                                <th class="p-4 text-center">Top Weight</th>
+                                <th class="p-4">Exercise Name</th>
+                                <th class="p-4">Target Anatomy</th>
+                                <th class="p-4 text-center">Sets Tracked</th>
+                                <th class="p-4 text-center">Peak Load</th>
                                 <th class="p-4 text-center">Calculated Volume</th>
                                 <th class="p-4 text-right no-print">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="(w, idx) in workouts">
+                            <template x-for="(w, index) in workouts">
                                 <tr class="border-b border-slate-100 dark:border-slate-800 text-xs hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
                                     <td class="p-4 font-medium" x-text="w.date"></td>
-                                    <td class="p-4 font-bold uppercase tracking-tight" x-text="w.name"></td>
-                                    <td class="p-4"><span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-bold" x-text="w.primaryGroup"></span></td>
+                                    <td class="p-4 font-black uppercase tracking-tight text-slate-900 dark:text-slate-100" x-text="w.name"></td>
+                                    <td class="p-4"><span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-bold text-[10px]" x-text w.primaryGroup></span></td>
                                     <td class="p-4 text-center font-bold" x-text="w.sets.length"></td>
-                                    <td class="p-4 text-center text-brand-500 font-black" x-text="getTopWeight(w.sets) + ' kg'"></td>
-                                    <td class="p-4 text-center font-black" x-text="calculateVolume(w.sets) + ' kg'"></td>
-                                    <td class="p-4 text-right no-print"><button @click="deleteItem('workout', idx)" class="text-red-500 font-bold hover:underline">Delete</button></td>
+                                    <td class="p-4 text-center text-brand-500 font-black" x-text="evaluatePeakWeight(w.sets) + ' kg'"></td>
+                                    <td class="p-4 text-center font-black" x-text="evaluateVolumeLoad(w.sets) + ' kg'"></td>
+                                    <td class="p-4 text-right no-print"><button @click="eraseVaultLogItem('workout', index)" class="text-red-500 font-bold hover:underline">Delete</button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -418,56 +440,56 @@
             </div>
         </div>
 
-        <div x-show="activeTab === 'diet'" x-cloak class="space-y-8">
+        <div x-show="activeTab === 'diet'" x-cloak class="space-y-8 animate-in fade-in duration-200">
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-3xl font-extrabold tracking-tight">Diet Tracking</h2>
-                    <p class="text-sm text-slate-500">Log meals, macronutrient weights, and baseline hydration parameters.</p>
+                    <p class="text-sm text-slate-500">Supervise food logs, nutritional mass units, and dynamic macros calculations.</p>
                 </div>
-                <button @click="openModal('logDay')" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md">Log Diet & Vitals</button>
+                <button @click="openModalWindow('modalDay')" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md">Log Metrics & Diet</button>
             </div>
 
-            <div x-show="logs.length === 0" class="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-sm text-slate-400">
-                No ingestion data channels found. Select "Log Diet & Vitals" to build an execution record.
+            <div x-show="logs.length === 0" class="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-xs text-slate-400">
+                Empty diet module context profiles register maps. Initialize an ingestion record tracking sheet.
             </div>
 
             <div x-show="logs.length > 0" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-64 lg:col-span-2">
-                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Protein Intake Stability Timeline</p>
-                    <div class="h-48 relative"><canvas id="canvas-protein-track"></canvas></div>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] h-64 lg:col-span-2 shadow-sm">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Protein Intake Stability Vectors</p>
+                    <div class="h-48 relative"><canvas id="canvas-protein-stability"></canvas></div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
-                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Macronutrient Distribution Profile</p>
-                    <div class="h-44 relative"><canvas id="canvas-macros-pie"></canvas></div>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between shadow-sm">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Latest Nutrient Distribution Range</p>
+                    <div class="h-44 relative"><canvas id="canvas-macro-distribution-gauge"></canvas></div>
                 </div>
             </div>
 
-            <div x-show="logs.length > 0" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+            <div x-show="logs.length > 0" class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold text-xs">
                                 <th class="p-4">Date</th>
-                                <th class="p-4 text-center">Calories</th>
-                                <th class="p-4 text-center">Protein</th>
-                                <th class="p-4 text-center">Carbs</th>
-                                <th class="p-4 text-center">Fat</th>
-                                <th class="p-4 text-center">Fiber</th>
-                                <th class="p-4 text-center">Water Ingested</th>
+                                <th class="p-4 text-center">Calories Consumed</th>
+                                <th class="p-4 text-center">Protein Mass</th>
+                                <th class="p-4 text-center">Carbohydrates</th>
+                                <th class="p-4 text-center">Fats Mass</th>
+                                <th class="p-4 text-center">Fiber Mass</th>
+                                <th class="p-4 text-center">Water Amount</th>
                                 <th class="p-4 text-right no-print">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="(l, idx) in logs">
+                            <template x-for="(l, index) in logs">
                                 <tr class="border-b border-slate-100 dark:border-slate-800 text-xs hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
                                     <td class="p-4 font-medium" x-text="l.date"></td>
-                                    <td class="p-4 text-center font-bold text-purple-500" x-text="(l.calories || 0) + ' kcal'"></td>
-                                    <td class="p-4 text-center font-medium" x-text="(l.protein || 0) + ' g'"></td>
-                                    <td class="p-4 text-center font-medium" x-text="(l.carbs || 0) + ' g'"></td>
-                                    <td class="p-4 text-center font-medium" x-text="(l.fats || 0) + ' g'"></td>
-                                    <td class="p-4 text-center font-medium" x-text="(l.fiber || 0) + ' g'"></td>
-                                    <td class="p-4 text-center font-black text-brand-500" x-text="(l.water || 0) + ' ml'"></td>
-                                    <td class="p-4 text-right no-print"><button @click="deleteItem('log', idx)" class="text-red-500 font-bold hover:underline">Delete</button></td>
+                                    <td class="p-4 text-center font-bold text-purple-500" x-text="l.calories + ' kcal'"></td>
+                                    <td class="p-4 text-center font-medium text-slate-700 dark:text-slate-300" x-text="l.protein + ' g'"></td>
+                                    <td class="p-4 text-center font-medium text-slate-700 dark:text-slate-300" x-text="l.carbs + ' g'"></td>
+                                    <td class="p-4 text-center font-medium text-slate-700 dark:text-slate-300" x-text="l.fats + ' g'"></td>
+                                    <td class="p-4 text-center font-medium text-slate-700 dark:text-slate-300" x-text="l.fiber + ' g'"></td>
+                                    <td class="p-4 text-center text-brand-500 font-black" x-text="l.water + ' ml'"></td>
+                                    <td class="p-4 text-right no-print"><button @click="eraseVaultLogItem('log', index)" class="text-red-500 font-bold hover:underline">Delete</button></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -476,202 +498,203 @@
             </div>
         </div>
 
-        <div x-show="activeTab === 'photos'" x-cloak class="space-y-8">
+        <div x-show="activeTab === 'photos'" x-cloak class="space-y-8 animate-in fade-in duration-200">
             <div>
                 <h2 class="text-3xl font-extrabold tracking-tight">Progress Photos</h2>
-                <p class="text-sm text-slate-500">Track visual composition transformations across training vectors.</p>
+                <p class="text-sm text-slate-500">Visual composition vault module tracks morphological updates across training ranges.</p>
             </div>
 
-            <div class="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">TARGET CHRONO DATE</label>
-                    <input type="date" id="input-photo-date" class="w-full p-2.5 rounded-xl text-xs">
+            <div class="p-6 bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800/80 rounded-3xl grid grid-cols-1 md:grid-cols-4 gap-4 items-end shadow-sm">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 block tracking-wider">CHRONOLOGICAL DATE</label>
+                    <input type="date" id="form-photo-date" class="w-full text-xs">
                 </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">IMAGE ORIENTATION VIEW</label>
-                    <select id="input-photo-type" class="w-full p-2.5 rounded-xl text-xs font-bold">
-                        <option value="Front">Front Orientation</option>
-                        <option value="Side">Side Profile View</option>
-                        <option value="Back">Posterior Chain View</option>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 block tracking-wider">VIEW PROFILE ANGLE</label>
+                    <select id="form-photo-type" class="w-full text-xs font-bold">
+                        <option value="Front">Front View</option>
+                        <option value="Side">Side View</option>
+                        <option value="Back">Back View</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 tracking-wider block mb-1">CHOOSE FILE</label>
-                    <input type="file" id="input-photo-file" class="w-full p-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 block tracking-wider">CHOOSE IMAGE FILE</label>
+                    <input type="file" id="form-photo-file" class="w-full text-xs p-1.5 bg-slate-50 dark:bg-slate-950">
                 </div>
-                <button @click="uploadProgressPhoto()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all">
-                    Sync Image Payload
+                <button @click="executePhotoVaultIngestion()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-brand-500/10">
+                    Upload Payload
                 </button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                <template x-for="p in photos">
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 space-y-3 relative overflow-hidden">
+                <template x-for="p in photos" :key="p.id">
+                    <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-[2rem] p-4 space-y-3 relative overflow-hidden shadow-sm">
                         <img :src="p.dataUrl" class="w-full h-64 object-cover rounded-2xl bg-slate-100 dark:bg-slate-950">
                         <div class="flex justify-between items-center text-xs px-1">
                             <div>
-                                <span class="font-black uppercase block tracking-wide" x-text="p.type + ' View'"></span>
+                                <span class="font-black uppercase block tracking-wider" x-text="p.type + ' View'"></span>
                                 <span class="text-slate-400 font-semibold" x-text="p.date"></span>
                             </div>
-                            <button @click="deletePhoto(p.id)" class="text-red-500 font-bold tracking-wider hover:underline">Wipe</button>
+                            <button @click="purgePhotoItem(p.id)" class="text-red-500 font-black tracking-widest hover:underline uppercase text-[10px]">Wipe</button>
                         </div>
                     </div>
                 </template>
             </div>
         </div>
 
-        <div x-show="activeTab === 'reports'" x-cloak class="space-y-8">
+        <div x-show="activeTab === 'reports'" x-cloak class="space-y-8 animate-in fade-in duration-200">
             <div>
                 <h2 class="text-3xl font-extrabold tracking-tight">Report Center</h2>
-                <p class="text-sm text-slate-500">Generate executive summaries and analysis documentation matrices.</p>
+                <p class="text-sm text-slate-500">Isolate execution history records block frames into high-end print-ready summaries reports.</p>
             </div>
 
-            <div class="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl space-y-4">
-                <h4 class="text-sm font-bold uppercase tracking-widest text-slate-400">Configure Scope Parameters</h4>
+            <div class="p-8 bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl space-y-4 shadow-sm">
+                <h4 class="text-xs font-black uppercase tracking-widest text-slate-400">Filter Range Scope Options</h4>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">START DATE</label>
-                        <input type="date" x-model="filterStart" class="w-full p-3 rounded-xl text-xs">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400">START DATE</label>
+                        <input type="date" x-model="filterStart" class="text-xs">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">END DATE</label>
-                        <input type="date" x-model="filterEnd" class="w-full p-3 rounded-xl text-xs">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400">END DATE</label>
+                        <input type="date" x-model="filterEnd" class="text-xs">
                     </div>
                 </div>
-                <button @click="window.print()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-transform active:scale-95 shadow-md">
-                    Initialize System Print Routine (PDF)
+                <button @click="window.print()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md shadow-brand-500/10">
+                    Open Print Configuration Matrix (PDF)
                 </button>
             </div>
         </div>
 
-        <div x-show="activeTab === 'system'" x-cloak class="space-y-8">
+        <div x-show="activeTab === 'system'" x-cloak class="space-y-8 animate-in fade-in duration-200">
             <div>
-                <h2 class="text-3xl font-extrabold tracking-tight">System Control Matrix</h2>
-                <p class="text-sm text-slate-500">Manage infrastructure models, memory pools, and variables context rules.</p>
+                <h2 class="text-3xl font-extrabold tracking-tight">System Registry</h2>
+                <p class="text-sm text-slate-500">Manage environment data architectures, file parsing tools, and reset options profiles context keys.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                    <h3 class="text-lg font-bold tracking-tight">Database Architecture Backup</h3>
-                    <p class="text-xs text-slate-400">Download or re-seed memory structures into the sandbox system container workspace manually.</p>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] space-y-4 shadow-sm">
+                    <h3 class="text-base font-black uppercase tracking-tight italic">Memory Storage Backups</h3>
+                    <p class="text-xs text-slate-400">Download, store, or clear the environment data instance records blocks manually from local variables pools safely.</p>
                     <div class="flex gap-2">
-                        <button @click="exportJSONBackup()" class="flex-1 bg-slate-100 dark:bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-500 hover:text-white transition-all">Backup JSON</button>
-                        <button @click="exportCSV()" class="flex-1 bg-slate-100 dark:bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-500 hover:text-white transition-all">Export CSV</button>
+                        <button @click="downloadSystemJSONBackup()" class="flex-1 bg-slate-50 dark:bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-500 hover:text-white transition-all">Download JSON</button>
+                        <button @click="downloadCSVTableExport()" class="flex-1 bg-slate-50 dark:bg-slate-800 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-500 hover:text-white transition-all">Download CSV</button>
                     </div>
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 tracking-wide block">RESTORE JSON DATA INSTANCE</label>
-                        <input type="file" @change="importJSONBackup($event)" class="w-full text-xs p-2 rounded-xl bg-slate-50 dark:bg-slate-950">
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 tracking-widest block">RESTORE VAULT BLOCKS FROM FILE</label>
+                        <input type="file" @change="parseJSONFileRestore($event)" class="text-xs p-2 rounded-xl bg-slate-50 dark:bg-slate-950">
                     </div>
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button @click="hardResetEngine()" class="w-full bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white border border-red-500/20 py-3 rounded-xl text-xs font-extrabold tracking-widest uppercase transition-all">
-                            Purge Global Database Registers
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                        <button @click="purgeCompleteEcosystem()" class="w-full bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white border border-red-500/20 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all">
+                            Purge Global Database Elements
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-                    <h3 class="text-lg font-bold tracking-tight">User Profile Summary</h3>
-                    <div class="space-y-2 text-xs" x-if="profile">
-                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Identity Vector:</span><strong x-text="profile.name"></strong></div>
-                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Configured Stature:</span><strong x-text="profile.height + ' cm'"></strong></div>
-                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Baseline Metrics:</span><strong x-text="profile.currentWeight + ' kg'"></strong></div>
-                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Assigned Objectives:</span><strong x-text="profile.goals.join(', ')"></strong></div>
+                <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] space-y-4 shadow-sm">
+                    <h3 class="text-base font-black uppercase tracking-tight italic">Active Profile Blueprint</h3>
+                    <div class="space-y-2.5 text-xs font-medium" x-if="profile">
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Identity Handle:</span><strong x-text="profile.name"></strong></div>
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Stature Index:</span><strong x-text="profile.height + ' cm'"></strong></div>
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Baseline Mass Target:</span><strong x-text="profile.currentWeight + ' kg'"></strong></div>
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Assigned Goals Pool:</span><strong class="text-brand-500" x-text="profile.goals.join(' • ')"></strong></div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div class="print-only hidden p-8">
-        <h1 class="text-3xl font-black border-b-4 border-black pb-2">ASCENDRA SYSTEM PERFORMANCE DOCUMENTATION</h1>
-        <p class="text-sm mt-2 font-bold" x-text="'Athlete Identity: ' + (profile ? profile.name : 'Unknown')"></p>
-        <p class="text-xs text-slate-500" x-text="'Generated Scope Horizon: ' + filterStart + ' to ' + filterEnd"></p>
+    <div class="print-only hidden p-12">
+        <h1 class="text-4xl font-black tracking-tight border-b-4 border-black pb-3">ASCENDRA SYSTEM MASTER LOGS EVALUATION REPORT</h1>
+        <p class="text-sm mt-3 font-bold" x-text="'Athlete Context Profile: ' + (profile ? profile.name : 'Unassigned Configuration')"></p>
+        <p class="text-xs text-slate-500" x-text="'Target Date Horizon Window: ' + filterStart + ' to ' + filterEnd"></p>
         
         <table class="w-full border-collapse mt-8">
             <thead>
-                <tr class="bg-slate-100 font-bold">
-                    <th>Timestamp Node</th>
-                    <th>Weight Parameters</th>
-                    <th>Waist Metric</th>
-                    <th>Calorie Value</th>
-                    <th>Protein Weight</th>
+                <tr class="bg-slate-200 font-bold">
+                    <th>Date Timeline Node</th>
+                    <th>Weight Values (kg)</th>
+                    <th>Waist Size Bounds (in)</th>
+                    <th>Caloric Value Logged</th>
+                    <th>Protein Weight Ingested (g)</th>
                 </tr>
             </thead>
             <tbody>
-                <template x-for="l in logs.filter(log => log.date >= filterStart && log.date <= filterEnd)">
+                <template x-for="log in logs.filter(l => l.date >= filterStart && l.date <= filterEnd)">
                     <tr>
-                        <td x-text="l.date"></td>
-                        <td x-text="l.weight + ' kg'"></td>
-                        <td x-text="l.waist + ' in'"></td>
-                        <td x-text="l.calories + ' kcal'"></td>
-                        <td x-text="l.protein + ' g'"></td>
+                        <td x-text="log.date" class="font-bold"></td>
+                        <td x-text="log.weight + ' kg'"></td>
+                        <td x-text="log.waist + ' in'"></td>
+                        <td x-text="log.calories + ' kcal'"></td>
+                        <td x-text="log.protein + ' g'"></td>
                     </tr>
                 </template>
             </tbody>
         </table>
     </div>
 
-    <div id="modal-logDay" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 md:p-8 flex flex-col gap-6">
+    <div id="modal-modalDay" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-[2.5rem] p-6 md:p-8 flex flex-col gap-6">
             <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
-                <h3 class="text-xl font-black uppercase italic tracking-tight">Log Daily Vitals & Diet</h3>
-                <button @click="closeModal('logDay')" class="text-xs font-black text-slate-400 tracking-widest uppercase hover:text-red-500">Close</button>
+                <h3 class="text-xl font-black uppercase italic tracking-tight">Log Daily Vitals & Nutrition</h3>
+                <button @click="closeModalWindow('modalDay')" class="text-xs font-black text-slate-400 tracking-widest uppercase hover:text-red-500">Close</button>
             </div>
 
-            <form @submit.preventDefault="saveDayLog()" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <form @submit.preventDefault="commitDayEntryLogObject()" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-4">
-                    <p class="text-[10px] font-black text-brand-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Context Metrics</p>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">DATE STAMP</label><input type="date" id="form-log-date" required class="w-full p-3 rounded-xl text-xs font-bold"></div>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">BODY WEIGHT (KG)</label><input type="number" step="0.1" id="form-log-weight" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="70.0"></div>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">WAIST WIDTH (IN)</label><input type="number" step="0.1" id="form-log-waist" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="32.0"></div>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">SLEEP DURATION (HOURS)</label><input type="number" step="0.5" id="form-log-sleep" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="8.0"></div>
+                    <p class="text-[10px] font-black text-brand-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Chrono & Metrics Context</p>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">CALENDAR DATE</label><input type="date" id="form-log-date" required></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">BODYWEIGHT (KG)</label><input type="number" step="0.1" id="form-log-weight" placeholder="0.0"></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">WAIST WIDTH (INCHES)</label><input type="number" step="0.1" id="form-log-waist" placeholder="0.0"></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">SLEEP METRICS (HRS)</label><input type="number" step="0.5" id="form-log-sleep" placeholder="0.0"></div>
                 </div>
                 <div class="space-y-4">
-                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Secondary Vitals</p>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">WATER AMOUNT (ML)</label><input type="number" id="form-log-water" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="3000"></div>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">PEDOMETER STEPS</label><input type="number" id="form-log-steps" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="10000"></div>
+                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Activity Vitals Mappings</p>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">WATER HYDRO INTAKE (ML)</label><input type="number" id="form-log-water" placeholder="0"></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">DAILY STEPS COUNT</label><input type="number" id="form-log-steps" placeholder="0"></div>
                     <div class="grid grid-cols-2 gap-2">
-                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">CHEST (IN)</label><input type="number" step="0.1" id="form-log-chest" class="w-full p-3 rounded-xl text-sm"></div>
-                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">ARMS (IN)</label><input type="number" step="0.1" id="form-log-arms" class="w-full p-3 rounded-xl text-sm"></div>
+                        <div class="space-y-1"><label class="text-[8px] font-bold text-slate-400">CHEST (IN)</label><input type="number" step="0.1" id="form-log-chest"></div>
+                        <div class="space-y-1"><label class="text-[8px] font-bold text-slate-400">ARMS (IN)</label><input type="number" step="0.1" id="form-log-arms"></div>
                     </div>
-                    <div><label class="text-[9px] font-bold text-slate-400 block mb-1">THIGHS (IN)</label><input type="number" step="0.1" id="form-log-thighs" class="w-full p-3 rounded-xl text-sm"></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">THIGHS CIRCUMFERENCE (IN)</label><input type="number" step="0.1" id="form-log-thighs"></div>
                 </div>
                 <div class="space-y-4">
-                    <p class="text-[10px] font-black text-purple-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Nutrition Ingestion Summary</p>
+                    <p class="text-[10px] font-black text-purple-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Macro Nutrients Allocation</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <div><label class="text-[9px] font-black text-slate-400 block mb-1">CALORIES (KCAL)</label><input type="number" id="form-log-calories" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="2000"></div>
-                        <div><label class="text-[9px] font-black text-slate-400 block mb-1">PROTEIN (G)</label><input type="number" id="form-log-protein" class="w-full p-3 rounded-xl text-sm font-semibold" placeholder="140"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">CALORIES</label><input type="number" id="form-log-calories" placeholder="0"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">PROTEIN (G)</label><input type="number" id="form-log-protein" placeholder="0"></div>
                     </div>
                     <div class="grid grid-cols-3 gap-1">
-                        <div><label class="text-[8px] font-bold text-slate-400 block mb-1">CARBS</label><input type="number" id="form-log-carbs" class="w-full p-2.5 rounded-lg text-xs"></div>
-                        <div><label class="text-[8px] font-bold text-slate-400 block mb-1">FATS</label><input type="number" id="form-log-fats" class="w-full p-2.5 rounded-lg text-xs"></div>
-                        <div><label class="text-[8px] font-bold text-slate-400 block mb-1">FIBER</label><input type="number" id="form-log-fiber" class="w-full p-2.5 rounded-lg text-xs"></div>
+                        <div class="space-y-1"><label class="text-[8px] font-bold text-slate-400">CARBS</label><input type="number" id="form-log-carbs"></div>
+                        <div class="space-y-1"><label class="text-[8px] font-bold text-slate-400">FATS</label><input type="number" id="form-log-fats"></div>
+                        <div class="space-y-1"><label class="text-[8px] font-bold text-slate-400">FIBER</label><input type="number" id="form-log-fiber"></div>
                     </div>
-                    <div><label class="text-[9px] font-black text-slate-400 block mb-1">RECOVERY REFLECTIONS / LOG COMMENTS</label><textarea id="form-log-comments" class="w-full p-3 rounded-xl text-xs h-16 resize-none" placeholder="Notes..."></textarea></div>
+                    <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 block">OBSERVATIONAL WORKOUT LOG REMARKS</label><textarea id="form-log-comments" class="w-full h-16 resize-none" placeholder="Notes..."></textarea></div>
                 </div>
-                <button type="submit" class="w-full md:col-span-3 bg-brand-500 hover:bg-brand-600 text-white font-black py-4 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md shadow-brand-500/10">
-                    Synchronize Diagnostics Log Block
+
+                <button type="submit" class="w-full md:col-span-3 bg-brand-500 hover:bg-brand-600 text-white font-black py-4 rounded-xl text-xs tracking-widest uppercase transition-all shadow-lg shadow-brand-500/10">
+                    Sync Parameter Metrics Object
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="modal-logWorkout" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 md:p-8 flex flex-col gap-6">
+    <div id="modal-modalWorkout" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 md:p-8 flex flex-col gap-6">
             <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h3 class="text-xl font-black uppercase italic tracking-tight">Record Workout Volume</h3>
-                <button @click="closeModal('logWorkout')" class="text-xs font-bold text-slate-400 tracking-widest uppercase hover:text-red-500">Close</button>
+                <button @click="closeModalWindow('modalWorkout')" class="text-xs font-bold text-slate-400 tracking-widest uppercase hover:text-red-500">Close</button>
             </div>
 
-            <form @submit.preventDefault="saveWorkout()" class="space-y-4">
+            <form @submit.preventDefault="commitWorkoutEntryLogObject()" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-[10px] font-black text-slate-400 block mb-1">SESSION DATE</label><input type="date" id="form-w-date" required class="w-full p-3 rounded-xl text-xs font-bold"></div>
-                    <div><label class="text-[10px] font-black text-slate-400 block mb-1">EXERCISE TITLE</label><input type="text" id="form-w-name" required placeholder="Bench Press" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 block">SESSION CHRONO TIMESTAMP</label><input type="date" id="form-w-date" required></div>
+                    <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 block">EXERCISE CHOSEN TARGET</label><input type="text" id="form-w-name" required placeholder="e.g. Incline Bench Press"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 block mb-1">PRIMARY MUSCLE TARGET</label>
-                        <select id="form-w-group" class="w-full p-3 rounded-xl text-sm font-semibold">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 block">PRIMARY TARGET ANATOMY GROUP</label>
+                        <select id="form-w-group" class="cursor-pointer">
                             <option value="Chest">Chest</option>
                             <option value="Back">Back</option>
                             <option value="Legs">Legs</option>
@@ -682,109 +705,122 @@
                         </select>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
-                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1 text-center">SETS</label><input type="number" id="form-w-sets" required class="w-full p-3 rounded-xl text-center font-bold"></div>
-                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1 text-center">REPS</label><input type="number" id="form-w-reps" required class="w-full p-3 rounded-xl text-center font-bold"></div>
-                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1 text-center">LOAD KG</label><input type="number" step="0.5" id="form-w-weight" required class="w-full p-3 rounded-xl text-center font-black text-brand-500"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-bold text-slate-400 block text-center">SETS</label><input type="number" id="form-w-sets" required class="text-center font-bold"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-bold text-slate-400 block text-center">REPS</label><input type="number" id="form-w-reps" required class="text-center font-bold"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-bold text-slate-400 block text-center">KG LOAD</label><input type="number" step="0.5" id="form-w-weight" required class="text-center font-black text-brand-500"></div>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-4 rounded-xl text-xs tracking-widest uppercase shadow-md transition-all active:scale-95">
-                    Commit Performance Data Sets
+                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-4 rounded-xl text-xs tracking-widest uppercase transition-all transform active:scale-95 shadow-md">
+                    Commit Workout Set Vector Block
                 </button>
             </form>
         </div>
     </div>
 
     <script>
-        function ascendraApp() {
+        function ascendraEngine() {
             return {
-                theme: localStorage.getItem('ascendra_theme') || 'dark',
+                theme: localStorage.getItem('asc_theme_mode') || 'dark',
                 activeTab: 'dashboard',
-                showOnboarding: true,
-                predefinedGoals: ['Muscle Gain', 'Fat Loss', 'Weight Loss', 'Weight Gain', 'Strength Increase', 'Better Sleep', 'Improve Cardio', 'Increase Water Intake', 'Improve Consistency'],
+                showWizard: true,
+                goalOptions: ['Muscle Gain', 'Fat Loss', 'Weight Loss', 'Weight Gain', 'Strength Increase', 'Better Sleep', 'Improve Cardio', 'Increase Water Intake', 'Improve Consistency'],
                 
-                // Form Scopes Data Mapping Arrays
-                onboardForm: { name: '', age: '', gender: 'Male', height: '', currentWeight: '', currentBodyFat: '', activityLevel: 'Moderately Active', targetWeight: '', targetBodyFat: '', targetDate: '', goals: [] },
+                // Form mapping models components arrays
+                wizard: { name: '', age: '', gender: 'Male', height: '', currentWeight: '', currentBodyFat: '', activityLevel: 'Moderately Active', targetWeight: '', targetBodyFat: '', targetDate: '', goals: [] },
                 filterStart: '',
                 filterEnd: new Date().toISOString().split('T')[0],
                 
-                // Storage Structural Paradigms Core Registers
+                // Memory registers arrays repositories
                 profile: null,
                 logs: [],
                 workouts: [],
                 photos: [],
                 
-                // Analytics Computation Vault
-                computedMetrics: { goalCompletionPercent: 0, daysRemaining: 0, consistencyScore: 0, streakCurrent: 0, latestWeight: 0, personalRecords: [], aiInsights: '' },
-                chartRegistry: {},
+                // Analytical calculations outputs pipeline
+                metrics: { goalCompletionPercent: 0, daysRemaining: 0, consistencyScore: 0, streakCurrent: 0, currentWeight: 0, personalRecords: [], aiInsights: '' },
+                chartCollection: {},
 
                 initEngine() {
-                    // Check local memory registers to evaluate if onboarding wizard interface is demanded
-                    const localProfile = localStorage.getItem('ascendra_user_profile');
-                    const localLogs = localStorage.getItem('ascendra_logs_v1');
-                    const localWorkouts = localStorage.getItem('ascendra_workouts_v1');
-                    const localPhotos = localStorage.getItem('ascendra_photos_v1');
+                    const savedProfile = localStorage.getItem('ascendra_profile_data');
+                    const savedLogs = localStorage.getItem('ascendra_logs_array');
+                    const savedWorkouts = localStorage.getItem('ascendra_workouts_array');
+                    const savedPhotos = localStorage.getItem('ascendra_photos_array');
 
-                    if (localProfile) {
-                        this.profile = JSON.parse(localProfile);
-                        this.logs = localLogs ? JSON.parse(localLogs) : [];
-                        this.workouts = localWorkouts ? JSON.parse(localWorkouts) : [];
-                        this.photos = localPhotos ? JSON.parse(localPhotos) : [];
-                        this.showOnboarding = false;
+                    if (savedProfile) {
+                        this.profile = JSON.parse(savedProfile);
+                        this.logs = savedLogs ? JSON.parse(savedLogs) : [];
+                        this.workouts = savedWorkouts ? JSON.parse(savedWorkouts) : [];
+                        this.photos = savedPhotos ? JSON.parse(savedPhotos) : [];
+                        this.showWizard = false;
+                        
+                        // Setup default form calendar tags index targets
+                        this.$nextTick(() => {
+                            this.syncInputDatesToToday();
+                        });
                     } else {
-                        this.showOnboarding = true;
+                        this.showWizard = true;
                     }
 
                     this.applyThemeConfiguration();
-                    this.filterStart = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
                     this.recomputeSystemAnalytics();
+                },
+
+                syncInputDatesToToday() {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const dInput = document.getElementById('form-log-date');
+                    const wInput = document.getElementById('form-w-date');
+                    const pInput = document.getElementById('form-photo-date');
+                    if(dInput) dInput.value = todayStr;
+                    if(wInput) wInput.value = todayStr;
+                    if(pInput) pInput.value = todayStr;
                 },
 
                 applyThemeConfiguration() {
                     document.documentElement.classList.toggle('dark', this.theme === 'dark');
                 },
 
-                toggleTheme() {
+                toggleGlobalInterfaceTheme() {
                     this.theme = this.theme === 'dark' ? 'light' : 'dark';
-                    localStorage.setItem('ascendra_theme', this.theme);
+                    localStorage.setItem('asc_theme_mode', this.theme);
                     this.applyThemeConfiguration();
                     this.recomputeSystemAnalytics();
                 },
 
-                switchTab(tabId) {
-                    this.activeTab = tabId;
+                switchNavigationTab(id) {
+                    this.activeTab = id;
                     this.recomputeSystemAnalytics();
                 },
 
-                submitOnboarding() {
-                    this.profile = JSON.parse(JSON.stringify(this.onboardForm));
-                    localStorage.setItem('ascendra_user_profile', JSON.stringify(this.profile));
-                    this.showOnboarding = false;
+                processOnboarding() {
+                    this.profile = JSON.parse(JSON.stringify(this.wizard));
+                    localStorage.setItem('ascendra_profile_data', JSON.stringify(this.profile));
+                    this.showWizard = false;
                     
-                    // Pre-fill target forms date indices safely
-                    document.getElementById('form-log-date').value = new Date().toISOString().split('T')[0];
-                    document.getElementById('form-w-date').value = new Date().toISOString().split('T')[0];
-                    document.getElementById('input-photo-date').value = new Date().toISOString().split('T')[0];
-
-                    this.recomputeSystemAnalytics();
+                    this.$nextTick(() => {
+                        this.syncInputDatesToToday();
+                        this.recomputeSystemAnalytics();
+                    });
                 },
 
-                openModal(id) {
-                    document.getElementById(`modal-${id}`).classList.remove('hidden');
+                openModalWindow(id) {
+                    const modalEl = document.getElementById(`modal-${id}`);
+                    if(modalEl) modalEl.classList.remove('hidden');
                 },
 
-                closeModal(id) {
-                    document.getElementById(`modal-${id}`).classList.add('hidden');
+                closeModalWindow(id) {
+                    const modalEl = document.getElementById(`modal-${id}`);
+                    if(modalEl) modalEl.classList.add('hidden');
                 },
 
-                getFormattedDate() {
+                getFormattedCalendarDate() {
                     return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 },
 
-                saveDayLog() {
+                commitDayEntryLogObject() {
                     const date = document.getElementById('form-log-date').value;
-                    const matchIndex = this.logs.findIndex(l => l.date === date);
+                    const existingIndex = this.logs.findIndex(l => l.date === date);
 
-                    const record = {
+                    const payload = {
                         date,
                         workoutTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
                         weight: parseFloat(document.getElementById('form-log-weight').value) || 0,
@@ -803,309 +839,292 @@
                         comments: document.getElementById('form-log-comments').value || ""
                     };
 
-                    if (matchIndex > -1) this.logs[matchIndex] = record;
-                    else this.logs.unshift(record);
+                    if (existingIndex > -1) this.logs[existingIndex] = payload;
+                    else this.logs.unshift(payload);
 
-                    this.commitAndRefresh('logDay', 'ascendra_logs_v1', this.logs);
+                    this.saveDataArrayToLocalStorage('modalDay', 'ascendra_logs_array', this.logs);
                 },
 
-                saveWorkout() {
-                    const setsCount = parseInt(document.getElementById('form-w-sets').value) || 0;
+                commitWorkoutEntryLogObject() {
+                    const totalSets = parseInt(document.getElementById('form-w-sets').value) || 0;
                     const reps = parseInt(document.getElementById('form-w-reps').value) || 0;
                     const weight = parseFloat(document.getElementById('form-w-weight').value) || 0;
-                    
-                    const setsArray = [];
-                    for(let i=0; i<setsCount; i++) {
-                        setsArray.push({ reps, weight });
+
+                    const setsBucket = [];
+                    for(let i=0; i<totalSets; i++) {
+                        setsBucket.push({ reps, weight });
                     }
 
-                    const record = {
+                    const payload = {
                         id: Date.now(),
                         date: document.getElementById('form-w-date').value,
                         name: document.getElementById('form-w-name').value,
                         primaryGroup: document.getElementById('form-w-group').value,
-                        sets: setsArray
+                        sets: setsBucket
                     };
 
-                    this.workouts.unshift(record);
-                    this.commitAndRefresh('logWorkout', 'ascendra_workouts_v1', this.workouts);
+                    this.workouts.unshift(payload);
+                    this.saveDataArrayToLocalStorage('modalWorkout', 'ascendra_workouts_array', this.workouts);
                 },
 
-                deleteItem(type, idx) {
-                    if(confirm("Purge selected record from Local Vault memory?")) {
-                        if (type === 'workout') { this.workouts.splice(idx, 1); localStorage.setItem('ascendra_workouts_v1', JSON.stringify(this.workouts)); }
-                        if (type === 'log') { this.logs.splice(idx, 1); localStorage.setItem('ascendra_logs_v1', JSON.stringify(this.logs)); }
+                eraseVaultLogItem(type, index) {
+                    if(confirm("Confirm irreversible deletion instruction command?")) {
+                        if (type === 'workout') { this.workouts.splice(index, 1); localStorage.setItem('ascendra_workouts_array', JSON.stringify(this.workouts)); }
+                        if (type === 'log') { this.logs.splice(index, 1); localStorage.setItem('ascendra_logs_array', JSON.stringify(this.logs)); }
                         this.recomputeSystemAnalytics();
                     }
                 },
 
-                commitAndRefresh(modalId, storageKey, dataObject) {
+                saveDataArrayToLocalStorage(modalId, storageKey, dataObject) {
                     this.logs.sort((a,b) => new Date(b.date) - new Date(a.date));
                     localStorage.setItem(storageKey, JSON.stringify(dataObject));
-                    this.closeModal(modalId);
+                    this.closeModalWindow(modalId);
                     this.recomputeSystemAnalytics();
                 },
 
-                getTopWeight(sets) {
+                evaluatePeakWeight(sets) {
                     if(!sets || !sets.length) return 0;
                     return Math.max(...sets.map(s => s.weight));
                 },
 
-                calculateVolume(sets) {
+                evaluateVolumeLoad(sets) {
                     if(!sets || !sets.length) return 0;
-                    return sets.reduce((sum, s) => sum + (s.reps * s.weight), 0);
+                    return sets.reduce((acc, s) => acc + (s.reps * s.weight), 0);
                 },
 
-                uploadProgressPhoto() {
-                    const fileInput = document.getElementById('input-photo-file');
-                    const date = document.getElementById('input-photo-date').value;
-                    const type = document.getElementById('input-photo-type').value;
+                executePhotoVaultIngestion() {
+                    const uploader = document.getElementById('form-photo-file');
+                    const date = document.getElementById('form-photo-date').value;
+                    const type = document.getElementById('form-photo-type').value;
 
-                    if(fileInput.files && fileInput.files[0]) {
+                    if(uploader.files && uploader.files[0]) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             this.photos.unshift({
                                 id: Date.now(),
                                 date, type, dataUrl: e.target.result
                             });
-                            localStorage.setItem('ascendra_photos_v1', JSON.stringify(this.photos));
-                            fileInput.value = '';
+                            localStorage.setItem('ascendra_photos_array', JSON.stringify(this.photos));
+                            uploader.value = '';
                         };
-                        reader.readAsDataURL(fileInput.files[0]);
+                        reader.readAsDataURL(uploader.files[0]);
                     }
                 },
 
-                deletePhoto(id) {
-                    if(confirm("Delete image data?")) {
+                purgePhotoItem(id) {
+                    if(confirm("Delete progress photo entry binary?")) {
                         this.photos = this.photos.filter(p => p.id !== id);
-                        localStorage.setItem('ascendra_photos_v1', JSON.stringify(this.photos));
+                        localStorage.setItem('ascendra_photos_array', JSON.stringify(this.photos));
                     }
                 },
 
                 recomputeSystemAnalytics() {
                     if(!this.profile) return;
-                    
-                    // 1. Core Timeline Bounding Calculations
-                    const startTarget = new Date(this.profile.targetDate);
-                    const deltaRemaining = Math.max(Math.round((startTarget - Date.now()) / 86400000), 0);
-                    this.computedMetrics.daysRemaining = deltaRemaining;
 
-                    // 2. Weight delta calculation matrices
-                    const validWeightLogs = this.logs.filter(l => l.weight > 0);
-                    const latestW = validWeightLogs.length > 0 ? validWeightLogs[0].weight : this.profile.currentWeight;
-                    this.computedMetrics.latestWeight = latestW;
+                    const targetDateObj = new Date(this.profile.targetDate);
+                    this.metrics.daysRemaining = Math.max(Math.round((targetDateObj - Date.now()) / 86400000), 0);
 
-                    let completion = 0;
-                    const totalDeltaGoal = this.profile.currentWeight - this.profile.targetWeight;
-                    if(totalDeltaGoal !== 0) {
-                        const currentDeltaAchieved = this.profile.currentWeight - latestW;
-                        completion = Math.min(Math.max(Math.round((currentDeltaAchieved / totalDeltaGoal) * 100), 0), 100);
+                    const validWLogs = this.logs.filter(l => l.weight > 0);
+                    const lastWValue = validWLogs.length > 0 ? validWLogs[0].weight : this.profile.currentWeight;
+                    this.metrics.currentWeight = lastWValue;
+
+                    let targetProgressPercent = 0;
+                    const deltaTotalSpan = this.profile.currentWeight - this.profile.targetWeight;
+                    if(deltaTotalSpan !== 0) {
+                        const progressiveSpanAchieved = this.profile.currentWeight - lastWValue;
+                        targetProgressPercent = Math.min(Math.max(Math.round((progressiveSpanAchieved / deltaTotalSpan) * 100), 0), 100);
                     }
-                    this.computedMetrics.goalCompletionPercent = completion;
+                    this.metrics.goalCompletionPercent = targetProgressPercent;
 
-                    // 3. Dynamic Streaks Parser
-                    let currentStreak = 0;
-                    let processDate = new Date();
-                    const logDateStrings = new Set(this.logs.map(l => l.date));
+                    // Compute rolling streak count matrices
+                    let runningStreak = 0;
+                    let cursorDate = new Date();
+                    const datesLoggedSet = new Set(this.logs.map(l => l.date));
                     for(let i=0; i<365; i++) {
-                        const checkString = processDate.toISOString().split('T')[0];
-                        if (logDateStrings.has(checkString)) {
-                            currentStreak++;
+                        const currentCodeStr = cursorDate.toISOString().split('T')[0];
+                        if (datesLoggedSet.has(currentCodeStr)) {
+                            runningStreak++;
                         } else {
                             if (i === 0) {
-                                processDate.setDate(processDate.getDate() - 1);
-                                if (logDateStrings.has(processDate.toISOString().split('T')[0])) continue;
+                                cursorDate.setDate(cursorDate.getDate() - 1);
+                                if (datesLoggedSet.has(cursorDate.toISOString().split('T')[0])) continue;
                             }
                             break;
                         }
-                        processDate.setDate(processDate.getDate() - 1);
+                        cursorDate.setDate(cursorDate.getDate() - 1);
                     }
-                    this.computedMetrics.streakCurrent = currentStreak;
-                    this.computedMetrics.consistencyScore = Math.min(Math.round((this.logs.length / 30) * 100), 100);
+                    this.metrics.streakCurrent = runningStreak;
+                    this.metrics.consistencyScore = Math.min(Math.round((this.logs.length / 20) * 100), 100);
 
-                    // 4. Personal Record Index mapping loops
-                    const prMap = {};
+                    // Re-index PR mapping values maps
+                    const bestLiftMap = {};
                     this.workouts.forEach(w => {
-                        const maxW = this.getTopWeight(w.sets);
-                        if(!prMap[w.name] || maxW > prMap[w.name]) {
-                            prMap[w.name] = maxW;
+                        const topVal = this.evaluatePeakWeight(w.sets);
+                        if(!bestLiftMap[w.name] || topVal > bestLiftMap[w.name]) {
+                            bestLiftMap[w.name] = topVal;
                         }
                     });
-                    this.computedMetrics.personalRecords = Object.keys(prMap).map(k => ({ name: k, weight: prMap[k] }));
+                    this.metrics.personalRecords = Object.keys(bestLiftMap).map(k => ({ name: k, weight: bestLiftMap[k] }));
+                    this.metrics.aiInsights = this.generateDynamicOperationalInsights(lastWValue, deltaTotalSpan);
 
-                    // 5. Rule-Based AI Engine Evaluation
-                    this.computedMetrics.aiInsights = this.generateAnalyticalInsights(latestW, totalDeltaGoal);
-
-                    // 6. Deferred Re-render vectors for Chart JS layers
                     this.$nextTick(() => {
                         this.renderContributionMap();
                         this.refreshDataCharts();
                     });
                 },
 
-                generateAnalyticalInsights(latestW, totalDeltaGoal) {
-                    if (this.logs.length === 0) {
-                        return "Core tracking architecture standing by. Insert daily biological metric logs to spin up the AI analytical heuristics.";
-                    }
+                generateDynamicOperationalInsights(lastWValue, deltaTotalSpan) {
+                    if (this.logs.length === 0) return "Analytical parsing registers empty. Populate standard parameters inputs to trigger heuristics models evaluations logs.";
                     
-                    let statements = [];
-                    const targetW = this.profile.targetWeight;
-                    
-                    if (totalDeltaGoal > 0) { // Goal is Weight Loss
-                        if (latestW <= targetW) statements.push("Target weight metric achieved. Transitioning to local weight maintenance baseline advice rules.");
-                        else statements.push(`Track metrics steady. You are currently positioned ${ (latestW - targetW).toFixed(1) } kg away from your objective threshold target endpoint.`);
-                    } else { // Goal is Weight Gain
-                        if (latestW >= targetW) statements.push("Target mass endpoint parameter logged. Maintain structured nutritional load configurations.");
-                        else statements.push(`Mass progression trajectory moving. Remaining variance space registers at ${ (targetW - latestW).toFixed(1) } kg.`);
+                    let insights = [];
+                    const goalW = this.profile.targetWeight;
+                    if (deltaTotalSpan > 0) {
+                        if (lastWValue <= goalW) insights.push("Target weight reached. Shift focus to steady state metabolic configurations.");
+                        else insights.push(`You are positioned ${ (lastWValue - goalW).toFixed(1) } kg above your configured terminal objective parameter.`);
+                    } else {
+                        if (lastWValue >= goalW) insights.push("Mass endpoint vector hit successfully. Keep loading structural volume profiles.");
+                        else insights.push(`Mass loading trajectory tracking steady. Variance room spans ${ (goalW - lastWValue).toFixed(1) } kg remaining.`);
                     }
 
-                    const slice7 = this.logs.slice(0, 7);
-                    if(slice7.length > 0) {
-                        const averageProt = slice7.reduce((s,l) => s + (l.protein || 0), 0) / slice7.length;
-                        if(averageProt < 120) statements.push("Weekly protein intake levels are trending below recommended lean tissue threshold values.");
+                    const subSlice = this.logs.slice(0, 5);
+                    if(subSlice.length > 0) {
+                        const meanProtein = subSlice.reduce((acc,l) => acc + (l.protein || 0), 0) / subSlice.length;
+                        if(meanProtein < 130) insights.push("Protein structures running low. Increase dietary ingestion frequency to protect lean matrices.");
                     }
-
-                    return statements.join(' • ');
+                    return insights.join(' • ');
                 },
 
                 renderContributionMap() {
-                    const root = document.getElementById('heatmap-grid-root');
-                    if(!root) return;
-                    root.innerHTML = '';
+                    const canvasAnchor = document.getElementById('heatmap-grid-anchor');
+                    if(!canvasAnchor) return;
+                    canvasAnchor.innerHTML = '';
 
-                    const logDates = new Set(this.logs.map(l => l.date));
-                    let cursor = new Date();
-                    cursor.setDate(cursor.getDate() - 364);
-                    const shiftOffset = cursor.getDay();
-                    cursor.setDate(cursor.getDate() - shiftOffset);
+                    const datesLogged = new Set(this.logs.map(l => l.date));
+                    let cursor = new Date(); cursor.setDate(cursor.getDate() - 364);
+                    const shiftOffset = cursor.getDay(); cursor.setDate(cursor.getDate() - shiftOffset);
 
-                    let htmlString = '<div class="grid grid-flow-col grid-rows-7 gap-1">';
+                    let matrixString = '<div class="grid grid-flow-col grid-rows-7 gap-1">';
                     for(let i=0; i<371; i++) {
-                        const codeStr = cursor.toISOString().split('T')[0];
-                        const activelyLogged = logDates.has(codeStr);
-                        const fillClass = activelyLogged ? 'bg-blue-500 shadow-sm' : 'bg-slate-200 dark:bg-slate-800/80';
-                        htmlString += `<div class="w-3 h-3 rounded-sm ${fillClass}" title="${codeStr}"></div>`;
+                        const currentStringKey = cursor.toISOString().split('T')[0];
+                        const activelyLogged = datesLogged.has(currentStringKey);
+                        const fillClass = activelyLogged ? 'bg-brand-500 shadow-sm shadow-brand-500/20' : 'bg-slate-200 dark:bg-slate-800/60';
+                        matrixString += `<div class="w-3 h-3 rounded-sm ${fillClass}" title="${currentStringKey}"></div>`;
                         cursor.setDate(cursor.getDate() + 1);
                     }
-                    htmlString += '</div>';
-                    root.innerHTML = htmlString;
+                    matrixString += '</div>';
+                    canvasAnchor.innerHTML = matrixString;
                 },
 
                 refreshDataCharts() {
-                    const darkStatus = this.theme === 'dark';
-                    const scaleColorValue = darkStatus ? '#64748b' : '#94a3b8';
-                    const boundaryLineColor = darkStatus ? '#1e293b' : '#f1f5f9';
+                    const isDark = this.theme === 'dark';
+                    const labelColor = isDark ? '#94a3b8' : '#64748b';
+                    const linesColor = isDark ? '#1e293b' : '#f1f5f9';
 
-                    const chronoLogs = [...this.logs].reverse().slice(-14);
-                    const labels = chronoLogs.map(l => l.date.split('-').slice(1).join('/'));
+                    const sortedLogs = [...this.logs].reverse().slice(-14);
+                    const labels = sortedLogs.map(l => l.date.split('-').slice(1).join('/'));
 
-                    const axisScaleConfig = {
-                        x: { grid: { display: false }, ticks: { color: scaleColorValue, font: { size: 10 } } },
-                        y: { grid: { color: boundaryLineColor }, ticks: { color: scaleColorValue, font: { size: 10 } } }
+                    const scaleStructure = {
+                        x: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10 } } },
+                        y: { grid: { color: linesColor }, ticks: { color: labelColor, font: { size: 10 } } }
                     };
 
-                    const buildLineDataset = (name, rawData, hexColor) => ({
-                        label: name, data: rawData, borderColor: hexColor, backgroundColor: hexColor + '10',
+                    const compileDatasetProperties = (title, records, hexCode) => ({
+                        label: title, data: records, borderColor: hexCode, backgroundColor: hexCode + '12',
                         fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
                     });
 
-                    const instantiateChart = (canvasId, type, chartConfig) => {
-                        if (this.chartRegistry[canvasId]) this.chartRegistry[canvasId].destroy();
-                        const targetEl = document.getElementById(canvasId);
-                        if (targetEl) this.chartRegistry[canvasId] = new Chart(targetEl, chartConfig);
+                    const mountOrUpdateChartNode = (id, type, logicConfig) => {
+                        if (this.chartCollection[id]) this.chartCollection[id].destroy();
+                        const domElement = document.getElementById(id);
+                        if (domElement) this.chartCollection[id] = new Chart(domElement, logicConfig);
                     };
 
-                    // 1. Home Dashboard Weight Velocity Layout
-                    instantiateChart('canvas-weight-dash', 'line', {
+                    // 1. Dashboard Page Weight Analytics Chart
+                    mountOrUpdateChartNode('canvas-dash-weight', 'line', {
                         type: 'line',
-                        data: { labels, datasets: [buildLineDataset('Weight Progress', chronoLogs.map(l => l.weight), '#3b82f6')] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisScaleConfig }
+                        data: { labels, datasets: [compileDatasetProperties('Weight', sortedLogs.map(l => l.weight), '#3b82f6')] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: scaleStructure }
                     });
 
-                    // 2. Home Dashboard Calories Energy Profile Chart
-                    instantiateChart('canvas-calories-dash', 'line', {
+                    // 2. Dashboard Page Calories Energy Graph Node
+                    mountOrUpdateChartNode('canvas-dash-calories', 'line', {
                         type: 'line',
-                        data: { labels, datasets: [buildLineDataset('Calories', chronoLogs.map(l => l.calories), '#8b5cf6')] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisScaleConfig }
+                        data: { labels, datasets: [compileDatasetProperties('Energy', sortedLogs.map(l => l.calories), '#8b5cf6')] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: scaleStructure }
                     });
 
-                    // 3. Workouts Page Strength Volume Bar Chart
-                    const reversedWorkouts = [...this.workouts].reverse().slice(-10);
-                    instantiateChart('canvas-volume-track', 'bar', {
+                    // 3. Workouts Page Strength Volume Trackers Bar
+                    const sortedWorkouts = [...this.workouts].reverse().slice(-10);
+                    mountOrUpdateChartNode('canvas-volume-progression', 'bar', {
                         type: 'bar',
                         data: {
-                            labels: reversedWorkouts.map(w => w.date.split('-').slice(1).join('/') + ` ${w.name}`),
-                            datasets: [{ label: 'Lift Volume', data: reversedWorkouts.map(w => this.calculateVolume(w.sets)), backgroundColor: '#3b82f6', borderRadius: 4 }]
+                            labels: sortedWorkouts.map(w => w.date.split('-').slice(1).join('/') + ` ${w.name}`),
+                            datasets: [{ label: 'Lift Volume', data: sortedWorkouts.map(w => this.evaluateVolumeLoad(w.sets)), backgroundColor: '#3b82f6', borderRadius: 4 }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisScaleConfig }
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: scaleStructure }
                     });
 
-                    // 4. Diet Page Protein Ingestion Continuity Line
-                    instantiateChart('canvas-protein-track', 'line', {
+                    // 4. Diet Page Protein Intake Chart Line Vector
+                    mountOrUpdateChartNode('canvas-protein-stability', 'line', {
                         type: 'line',
-                        data: { labels, datasets: [buildLineDataset('Protein Intake', chronoLogs.map(l => l.protein), '#3b82f6')] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisScaleConfig }
+                        data: { labels, datasets: [compileDatasetProperties('Protein', sortedLogs.map(l => l.protein), '#3b82f6')] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: scaleStructure }
                     });
 
-                    // 5. Diet Page Macro Distributions Pie Layout Gauge
-                    const modernLatestLog = this.logs[0] || { protein: 120, carbs: 180, fats: 60 };
-                    instantiateChart('canvas-macros-pie', 'doughnut', {
+                    // 5. Diet Page Macro Split Pie Distribution Circle
+                    const newestDietObj = this.logs[0] || { protein: 140, carbs: 190, fats: 65 };
+                    mountOrUpdateChartNode('canvas-macro-distribution-gauge', 'doughnut', {
                         type: 'doughnut',
                         data: {
                             labels: ['Protein', 'Carbs', 'Fats'],
                             datasets: [{
-                                data: [parseInt(modernLatestLog.protein) || 1, parseInt(modernLatestLog.carbs) || 1, parseInt(modernLatestLog.fats) || 1],
+                                data: [parseInt(newestDietObj.protein) || 1, parseInt(newestDietObj.carbs) || 1, parseInt(newestDietObj.fats) || 1],
                                 backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'], borderWidth: 0
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: scaleColorValue, font: { size: 10 } } } } }
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: labelColor, font: { size: 10 } } } } }
                     });
                 },
 
-                exportJSONBackup() {
-                    const fileStr = JSON.stringify({ profile: this.profile, logs: this.logs, workouts: this.workouts, photos: this.photos }, null, 2);
-                    const binaryBlob = new Blob([fileStr], { type: 'application/json' });
-                    const hiddenAnchor = document.createElement('a');
-                    hiddenAnchor.href = URL.createObjectURL(binaryBlob);
-                    hiddenAnchor.download = `Ascendra_SystemOS_VaultBackup_${new Date().toISOString().slice(0,10)}.json`;
-                    hiddenAnchor.click();
+                downloadSystemJSONBackup() {
+                    const strData = JSON.stringify({ profile: this.profile, logs: this.logs, workouts: this.workouts, photos: this.photos }, null, 2);
+                    const anchorElement = document.createElement('a');
+                    anchorElement.href = URL.createObjectURL(new Blob([strData], { type: 'application/json' }));
+                    anchorElement.download = `Ascendra_Ecosystem_VaultBackup_${new Date().toISOString().slice(0,10)}.json`;
+                    anchorElement.click();
                 },
 
-                exportCSV() {
-                    let textBuffer = 'Type,Date,Weight,Waist,Calories,Protein,ExerciseName,SetsCalculated\n';
-                    this.logs.forEach(l => {
-                        textBuffer += `DailyDataNode,${l.date},${l.weight},${l.waist},${l.calories},${l.protein},,\n`;
-                    });
-                    this.workouts.forEach(w => {
-                        textBuffer += `StrengthVolumeNode,${w.date},,,,,${w.name},${w.sets.length}\n`;
-                    });
-                    const pseudoLink = document.createElement('a');
-                    pseudoLink.href = URL.createObjectURL(new Blob([textBuffer], { type: 'text/csv' }));
-                    pseudoLink.download = 'Ascendra_Metrics_Matrix.csv';
-                    pseudoLink.click();
+                downloadCSVTableExport() {
+                    let rowsBuffer = 'DataNode,CalendarDate,WeightValue,WaistSize,EnergyCalories,ProteinValue,LiftTitle\n';
+                    this.logs.forEach(l => { rowsBuffer += `DailyLogUnit,${l.date},${l.weight},${l.waist},${l.calories},${l.protein},,\n`; });
+                    this.workouts.forEach(w => { rowsBuffer += `WorkoutLogUnit,${w.date},,,,,${w.name}\n`; });
+                    const downLoader = document.createElement('a');
+                    downLoader.href = URL.createObjectURL(new Blob([rowsBuffer], { type: 'text/csv' }));
+                    downLoader.download = 'Ascendra_Performance_Matrix_Export.csv';
+                    downLoader.click();
                 },
 
-                importJSONBackup(event) {
-                    const dataReader = new FileReader();
-                    dataReader.onload = (e) => {
+                parseJSONFileRestore(event) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
                         try {
-                            const parsedStructure = JSON.parse(e.target.result);
-                            if(parsedStructure.profile) {
-                                localStorage.setItem('ascendra_user_profile', JSON.stringify(parsedStructure.profile));
-                                localStorage.setItem('ascendra_logs_v1', JSON.stringify(parsedStructure.logs || []));
-                                localStorage.setItem('ascendra_workouts_v1', JSON.stringify(parsedStructure.workouts || []));
-                                localStorage.setItem('ascendra_photos_v1', JSON.stringify(parsedStructure.photos || []));
+                            const payload = JSON.parse(e.target.result);
+                            if(payload.profile) {
+                                localStorage.setItem('ascendra_profile_data', JSON.stringify(payload.profile));
+                                localStorage.setItem('ascendra_logs_array', JSON.stringify(payload.logs || []));
+                                localStorage.setItem('ascendra_workouts_array', JSON.stringify(payload.workouts || []));
+                                localStorage.setItem('ascendra_photos_array', JSON.stringify(payload.photos || []));
                                 location.reload();
                             }
                         } catch(err) {
-                            alert("Crash pattern encountered reading validation bits in database load sequence.");
+                            alert("Corrupted backup format signature. Integrity match validation verification failed.");
                         }
                     };
-                    dataReader.readAsText(event.target.files[0]);
+                    reader.readAsText(event.target.files[0]);
                 },
 
-                hardResetEngine() {
-                    if(confirm("Confirm destructive wipe sequence? All LocalStorage data for ASCENDRA will be erased permanently.")) {
+                purgeCompleteEcosystem() {
+                    if(confirm("Wipe local environment cache storage spaces completely? This action cannot be reversed.")) {
                         localStorage.clear();
                         location.reload();
                     }
