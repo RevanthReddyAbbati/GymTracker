@@ -1,477 +1,1250 @@
 <!DOCTYPE html>
-<html lang="en" x-data="gymApp()" :class="{ 'dark': theme === 'dark' }">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForgePath OS | High-Performance Fitness Matrix</title>
+    <title>ForgePath OS | Premium Fitness Operating System</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#020617">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
-                        cyberBlue: '#3b82f6',
-                        neonGreen: '#10b981',
-                        pulsePurple: '#8b5cf6',
-                        slateDark: '#020617',
-                        slatePanel: '#0f172a'
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        }
                     }
                 }
             }
         }
     </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
         
-        /* EXPLICIT FORM BOX OVERRIDES - Eliminates default white backgrounds */
+        /* Modern Scrollbar Styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        
+        /* Persistent Deep-Themed Form Resets */
         input, select, textarea {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
-            border: 1px solid #334155 !important;
-            transition: all 0.2s ease-in-out;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
         }
         .dark input, .dark select, .dark textarea {
             background-color: #0f172a !important;
-            border-color: #1e293b !important;
+            color: #f8fafc !important;
+            border: 1px solid #1e293b !important;
         }
         input:focus, select:focus, textarea:focus {
+            outline: none !important;
             border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
-            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
         }
         input::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            opacity: 0.6;
+            filter: invert(0);
             cursor: pointer;
         }
-        .light input, .light select, .light textarea {
-            background-color: #f1f5f9 !important;
-            color: #0f172a !important;
-            border-color: #cbd5e1 !important;
+        .dark input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
         }
-        .light input::-webkit-calendar-picker-indicator {
-            filter: invert(0);
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
+        
+        /* Heatmap Grid Layout Custom Rule */
+        .grid-rows-7 { grid-template-rows: repeat(7, minmax(0, 1fr)); }
+        
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background: white !important; color: black !important; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 10px; font-size: 11px; text-align: left; color: black !important; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slateDark text-slate-900 dark:text-slate-100 min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 min-h-screen antialiased flex flex-col md:flex-row overflow-x-hidden">
 
-    <div class="no-print fixed top-6 right-6 z-[100]">
-        <button @click="toggleTheme()" class="p-3 rounded-2xl bg-white dark:bg-slatePanel shadow-2xl border border-slate-200 dark:border-slate-800 transition-transform active:scale-95">
-            <svg x-show="theme === 'dark'" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
-            <svg x-show="theme === 'light'" class="w-5 h-5 text-cyberBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-        </button>
-    </div>
-
-    <div class="flex flex-col lg:flex-row min-h-screen overflow-hidden">
-
-        <aside class="no-print w-full lg:w-80 bg-white dark:bg-slatePanel border-r border-slate-200 dark:border-slate-800 p-8 flex flex-col gap-8 z-30">
+    <aside class="no-print hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 shrink-0 h-screen sticky top-0 z-30">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-9 h-9 bg-brand-500 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-brand-500/20">F</div>
             <div>
-                <h1 class="text-2xl font-black tracking-tighter text-cyberBlue italic">FORGEPATH <span class="text-slate-900 dark:text-white">OS</span></h1>
-                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">High-Fidelity Tracking System</p>
+                <h1 class="text-lg font-extrabold tracking-tight uppercase leading-none">FORGEPATH <span class="text-brand-500">OS</span></h1>
+                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase mt-0.5">Sovereign Fitness Tracker</p>
             </div>
+        </div>
 
-            <button @click="openNewModal()" class="w-full bg-cyberBlue hover:bg-blue-600 text-white py-4 rounded-2xl font-extrabold shadow-xl shadow-blue-500/20 transition-all transform active:scale-95">
-                + CAPTURE DAILY PERFORMANCE
+        <nav class="space-y-1 flex-1">
+            <button onclick="UIEngine.switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all" data-tab="dashboard">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
+                Dashboard
             </button>
+            <button onclick="UIEngine.switchTab('workouts')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all" data-tab="workouts">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2a2.5 2.5 0 002.5-2.5V6.586M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
+                Workouts
+            </button>
+            <button onclick="UIEngine.switchTab('nutrition')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all" data-tab="nutrition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
+                Nutrition
+            </button>
+            <button onclick="UIEngine.switchTab('biometrics')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all" data-tab="biometrics">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2M11 21a9 9 0 119-9 9 9 0 01-9 9z"></path></svg>
+                Weight & Body
+            </button>
+            <button onclick="UIEngine.switchTab('goals')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all" data-tab="goals">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Goal Center
+            </button>
+            <button onclick="UIEngine.switchTab('settings')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all" data-tab="settings">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                System Controls
+            </button>
+        </nav>
 
-            <div class="space-y-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800 pb-2">Target Objectives</p>
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-500 block mb-1">TARGET TIMELINE (DAYS)</label>
-                        <input type="number" x-model="targets.days" @input="saveTargets()" class="w-full p-2 text-xs rounded-lg">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-500 block mb-1">TARGET MASS (KG)</label>
-                        <input type="number" step="0.1" x-model="targets.weight" @input="saveTargets()" class="w-full p-2 text-xs rounded-lg">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-500 block mb-1">DAILY ENERGY CEILING (KCAL)</label>
-                        <input type="number" x-model="targets.calories" @input="saveTargets()" class="w-full p-2 text-xs rounded-lg">
-                    </div>
-                </div>
-            </div>
+        <div class="mt-auto space-y-2">
+            <button onclick="UIEngine.openModal('modalLogDay')" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-xl text-xs tracking-wider uppercase transition-all shadow-lg shadow-brand-500/10">
+                Log Metrics
+            </button>
+            <button onclick="UIEngine.openModal('modalWorkout')" class="w-full border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold py-3 px-4 rounded-xl text-xs tracking-wider uppercase transition-all">
+                Track Gym Move
+            </button>
+        </div>
+    </aside>
 
-            <div class="space-y-2">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Protocols</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button @click="window.print()" class="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold hover:bg-cyberBlue hover:text-white transition-all">PRINT PDF</button>
-                    <button @click="exportCSV()" class="bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl text-xs font-bold hover:bg-neonGreen hover:text-white transition-all">EXPORT CSV</button>
-                </div>
-            </div>
+    <header class="no-print md:hidden flex justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-30">
+        <div class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold italic text-sm">F</div>
+            <h1 class="text-sm font-black uppercase tracking-tight">FORGEPATH <span class="text-brand-500">OS</span></h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="UIEngine.openModal('modalLogDay')" class="bg-brand-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Log</button>
+            <button onclick="UIEngine.toggleGlobalTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
+                <svg class="w-4 h-4 dark:hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
+                <svg class="w-4 h-4 hidden dark:block text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
+            </button>
+        </div>
+    </header>
 
-            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div class="flex justify-between text-[11px] mb-2 font-bold text-slate-400 uppercase">
-                    <span>Timeline Velocity</span>
-                    <span class="text-cyberBlue" x-text="logs.length + ' / ' + targets.days + ' Days'"></span>
-                </div>
-                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div class="bg-cyberBlue h-full transition-all duration-1000 shadow-[0_0_8px_rgba(59,130,246,0.5)]" :style="`width: ${Math.min((logs.length / targets.days) * 100, 100)}%` text-zinc-400"></div>
-                </div>
-            </div>
-        </aside>
-
-        <main class="flex-1 p-6 lg:p-12 space-y-10 overflow-y-auto h-screen no-scrollbar no-print">
-            
-            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 h-72 shadow-sm">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Biometric Trajectory (Weight)</p>
-                    <div class="h-56"><canvas id="chartW"></canvas></div>
-                </div>
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 h-72 shadow-sm">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Waist Compression Matrix</p>
-                    <div class="h-56"><canvas id="chartWaist"></canvas></div>
-                </div>
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 h-72 shadow-sm">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Energy Partitioning (vs Target)</p>
-                    <div class="h-56"><canvas id="chartCal"></canvas></div>
-                </div>
-            </section>
-
-            <section class="space-y-6">
-                <h2 class="text-2xl font-black italic tracking-tight flex items-center gap-3">
-                    <span class="w-8 h-1 bg-cyberBlue rounded-full"></span> PERFORMANCE DATA ENGINE
-                </h2>
-                
-                <div class="grid grid-cols-1 gap-6 pb-24">
-                    <template x-for="log in logs" :key="log.id">
-                        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden transition-all hover:border-cyberBlue">
-                            <div class="flex flex-wrap justify-between gap-4 mb-6">
-                                <div>
-                                    <span class="text-cyberBlue font-bold text-xs tracking-wider" x-text="formatDate(log.date) + ' @ ' + log.workoutTime"></span>
-                                    <h3 class="text-2xl font-black uppercase tracking-tight italic" x-text="log.workoutName || 'Physical Reconstruction Session'"></h3>
-                                </div>
-                                <div class="flex gap-2 items-center">
-                                    <button @click="editEntry(log)" class="bg-slate-100 dark:bg-slate-800 hover:bg-cyberBlue hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all">EDIT</button>
-                                    <button @click="deleteEntry(log.id)" class="bg-slate-100 dark:bg-slate-800 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold text-red-500 tracking-widest transition-all">DELETE</button>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Mass Metrics</p>
-                                    <p class="text-lg font-black" x-text="log.weight + ' kg'"></p>
-                                </div>
-                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Waist Bounds</p>
-                                    <p class="text-lg font-black" x-text="log.waist + ' in'"></p>
-                                </div>
-                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Sleep Window</p>
-                                    <p class="text-lg font-black" x-text="log.sleep + ' hrs'"></p>
-                                </div>
-                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Energy Logged</p>
-                                    <p class="text-lg font-black text-pulsePurple" x-text="calculateLogCalories(log) + ' kcal'"></p>
-                                </div>
-                                <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 col-span-2 md:col-span-1">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Cardio Vector</p>
-                                    <p class="text-sm font-black text-neonGreen" x-text="log.cardio.time ? log.cardio.time + 'm' : '0m'"></p>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">🏋️ Strength Volume Matrix</p>
-                                    <div class="space-y-2">
-                                        <template x-for="ex in log.exercises">
-                                            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
-                                                <span class="font-bold uppercase tracking-tight" x-text="ex.name"></span>
-                                                <span class="text-cyberBlue font-black" x-text="ex.sets + 'S × ' + ex.reps + 'R @ ' + ex.weight + 'kg'"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">🍱 Food Synthesis Timeline</p>
-                                    <div class="space-y-2">
-                                        <template x-for="(meal, index) in log.meals">
-                                            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-pulsePurple font-black" x-text="'M' + (index + 1)"></span>
-                                                    <span class="text-slate-400 font-medium text-[10px]" x-text="'[' + meal.time + ']'"></span>
-                                                    <span class="font-bold" x-text="meal.name"></span>
-                                                </div>
-                                                <span class="text-pulsePurple font-bold" x-text Alpine.raw(meal.calories) ? meal.calories + ' kcal' : '0 kcal'></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Session Insights</p>
-                                <p class="text-xs text-slate-500 italic" x-text="log.comments || 'No supplementary operational data compiled.'"></p>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <div x-show="showModal" x-cloak class="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md">
-        <div @click.away="showModal = false" class="bg-white dark:bg-slatePanel w-full max-w-6xl max-h-[92vh] overflow-hidden rounded-[3rem] shadow-2xl flex flex-col border border-slate-200 dark:border-slate-800">
-            
-            <div class="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20">
+    <main class="flex-1 overflow-y-auto h-screen p-4 md:p-8 lg:p-10 pb-24 md:pb-8">
+        
+        <div id="tab-dashboard" class="tab-content space-y-8 hidden">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
-                    <h2 class="text-3xl font-black italic uppercase tracking-tighter" x-text="isEditing ? 'Modify Synced Metrics' : 'Initialize Performance Entry'"></h2>
-                    <p class="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Local Data Node Logging Engine</p>
+                    <h2 class="text-3xl font-extrabold tracking-tight">Today's Summary</h2>
+                    <p class="text-sm text-slate-500" id="dashboard-date-display">System initialized successfully.</p>
                 </div>
-                <button @click="showModal = false" class="text-xs bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-4 py-2 rounded-xl font-bold tracking-widest hover:text-red-500">ABORT</button>
+                <div class="no-print flex gap-2 w-full lg:w-auto">
+                    <button onclick="UIEngine.openModal('modalLogDay')" class="flex-1 lg:flex-none bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-brand-500/10">Log Vital Stats</button>
+                    <button onclick="UIEngine.openModal('modalWorkout')" class="flex-1 lg:flex-none border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 px-5 py-3 rounded-xl font-bold text-sm transition-all">Record Session</button>
+                </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-8 lg:p-10 space-y-10 no-scrollbar">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    
-                    <div class="space-y-6">
-                        <p class="text-cyberBlue font-black text-[11px] uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">1. Macro Bounds & Cardio</p>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="date" x-model="form.date" class="w-full p-3 rounded-xl text-sm">
-                                <input type="time" x-model="form.workoutTime" class="w-full p-3 rounded-xl text-sm">
-                            </div>
-                            <input type="text" placeholder="Session Identifier (e.g. Pull A)" x-model="form.workoutName" class="w-full p-3 rounded-xl text-sm">
-                            <div class="grid grid-cols-3 gap-2">
-                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">WEIGHT (KG)</label><input type="number" step="0.1" x-model="form.weight" class="w-full p-3 rounded-xl text-center"></div>
-                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">WAIST (IN)</label><input type="number" step="0.1" x-model="form.waist" class="w-full p-3 rounded-xl text-center"></div>
-                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">SLEEP (HR)</label><input type="number" step="0.5" x-model="form.sleep" class="w-full p-3 rounded-xl text-center"></div>
-                            </div>
-                        </div>
-
-                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                            <p class="text-neonGreen font-black text-[11px] uppercase tracking-widest">Cardio Profile Parameters</p>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">TIME (MIN)</label><input type="number" x-model="form.cardio.time" class="w-full p-3 rounded-xl text-center"></div>
-                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">SPEED (KPH)</label><input type="number" step="0.1" x-model="form.cardio.speed" class="w-full p-3 rounded-xl text-center"></div>
-                                <div><label class="text-[9px] text-slate-400 font-bold block mb-1">INCLINE %</label><input type="number" step="0.5" x-model="form.cardio.incline" class="w-full p-3 rounded-xl text-center"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-6">
-                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-                            <p class="text-cyan-400 font-black text-[11px] uppercase tracking-widest">2. Strength Load Configuration</p>
-                            <button @click="addExerciseRow()" class="text-[10px] bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-full font-bold hover:bg-cyan-500 hover:text-white transition-all">+ ADD MOVE</button>
-                        </div>
-                        <div class="flex flex-col gap-4 w-full">
-                            <template x-for="(ex, index) in form.exercises" :key="index">
-                                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 relative">
-                                    <button @click="form.exercises.splice(index, 1)" class="absolute top-3 right-3 text-red-500 font-bold text-xs">REMOVE</button>
-                                    <input type="text" placeholder="Movement Identity" x-model="ex.name" class="w-full bg-transparent border-b border-slate-300 dark:border-slate-800 pb-2 text-sm outline-none font-bold">
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <div><span class="text-[9px] text-slate-400 block mb-1 text-center">SETS</span><input type="number" x-model="ex.sets" class="w-full p-2 text-center rounded-lg text-xs"></div>
-                                        <div><span class="text-[9px] text-slate-400 block mb-1 text-center">REPS</span><input type="number" x-model="ex.reps" class="w-full p-2 text-center rounded-lg text-xs"></div>
-                                        <div><span class="text-[9px] text-cyberBlue block mb-1 text-center">KG</span><input type="number" step="0.5" x-model="ex.weight" class="w-full p-2 text-center rounded-lg text-xs font-bold text-cyberBlue"></div>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <div class="space-y-6">
-                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-                            <p class="text-pulsePurple font-black text-[11px] uppercase tracking-widest">3. Food Item Allocation</p>
-                            <button @click="addMealRow()" class="text-[10px] bg-purple-500/10 text-pulsePurple px-4 py-2 rounded-full font-bold hover:bg-pulsePurple hover:text-white transition-all">+ ADD MEAL</button>
-                        </div>
-                        <div class="flex flex-col gap-3 w-full">
-                            <template x-for="(meal, index) in form.meals" :key="index">
-                                <div class="flex flex-col gap-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative">
-                                    <button @click="form.meals.splice(index, 1)" class="absolute top-2 right-3 text-red-500 text-[10px] font-bold">WIPE</button>
-                                    <div class="flex gap-2 items-center">
-                                        <span class="text-[10px] font-black text-pulsePurple uppercase" x-text="'MEAL ' + (index + 1)"></span>
-                                        <input type="time" x-model="meal.time" class="p-1.5 rounded-lg text-[11px] text-center w-24">
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <input type="text" placeholder="Macronutrient content" x-model="meal.name" class="col-span-2 p-2 rounded-lg text-xs">
-                                        <input type="number" placeholder="Calories" x-model="meal.calories" class="p-2 rounded-lg text-xs font-bold text-pulsePurple text-center">
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
-                            <p class="text-slate-400 font-bold text-[10px] uppercase mb-2">Supplemental Operational Commentary</p>
-                            <textarea x-model="form.comments" class="w-full p-4 rounded-2xl h-24 resize-none text-xs" placeholder="Log cognitive states, pre-workout efficiency parameters, or physical anomalies..."></textarea>
-                        </div>
+            <div class="p-5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-brand-500/20 flex items-center justify-center text-brand-500 font-bold shrink-0 mt-0.5">AI</div>
+                    <div>
+                        <h4 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">Dynamic Analytical Insights</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed" id="ai-insights-box">Loading biological logs and metrics matrix...</p>
                     </div>
                 </div>
             </div>
 
-            <div class="p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                <button @click="saveEntry()" class="w-full bg-cyberBlue hover:bg-blue-600 py-5 font-black text-xl text-white uppercase tracking-[0.2em] shadow-2xl transition-all transform active:scale-95">
-                    COMMIT LOG ENTRY TO VAULT
-                </button>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="dashboard-stats-grid">
+                </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-80">
+                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Weight Tracking Progress</p>
+                    <div class="h-64 relative"><canvas id="canvas-weight"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-80">
+                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Calorie Balancing Range</p>
+                    <div class="h-64 relative"><canvas id="canvas-calories"></canvas></div>
+                </div>
             </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-base font-extrabold tracking-tight">Consistency Tracking Map</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500">Every day logged pushes your score higher.</p>
+                    </div>
+                    <div class="flex gap-4 text-right">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 block">Current Streak</span>
+                            <span class="text-xl font-black text-brand-500" id="streak-current-display">0 Days</span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 block">All-Time Best</span>
+                            <span class="text-xl font-black text-emerald-500" id="streak-best-display">0 Days</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto no-scrollbar pt-2">
+                    <div class="min-w-[700px] flex flex-col gap-1" id="heatmap-wrapper">
+                        </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
+                    <h3 class="text-base font-extrabold tracking-tight">Latest Physical Activity</h3>
+                    <div class="divide-y divide-slate-100 dark:divide-slate-800 space-y-3" id="timeline-workouts">
+                        </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
+                    <h3 class="text-base font-extrabold tracking-tight">Latest Nutrition Timeline</h3>
+                    <div class="divide-y divide-slate-100 dark:divide-slate-800 space-y-3" id="timeline-nutrition">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-workouts" class="tab-content space-y-8 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-extrabold tracking-tight">Workouts</h2>
+                    <p class="text-sm text-slate-500">Track structural volume loading targets.</p>
+                </div>
+                <button onclick="UIEngine.openModal('modalWorkout')" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md">Record Session</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-64 lg:col-span-2">
+                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Total Lift Volume Trends</p>
+                    <div class="h-48 relative"><canvas id="canvas-volume"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Personal Records Matrix</p>
+                        <div class="space-y-2 max-h-40 overflow-y-auto" id="pr-list-container">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-base font-extrabold tracking-tight">Training History</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                                <th class="p-4">Date</th>
+                                <th class="p-4">Exercise Name</th>
+                                <th class="p-4">Muscle Focus</th>
+                                <th class="p-4 text-center">Sets × Reps</th>
+                                <th class="p-4 text-center">Load (kg)</th>
+                                <th class="p-4 text-center">Volume</th>
+                                <th class="p-4 text-right no-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-workout-rows">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-nutrition" class="tab-content space-y-8 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-extrabold tracking-tight">Nutrition</h2>
+                    <p class="text-sm text-slate-500">Manage energy balances and macros.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-64 lg:col-span-2">
+                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Protein Intake History</p>
+                    <div class="h-48 relative"><canvas id="canvas-protein"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Today's Macro Targets</p>
+                    <div class="h-44 relative"><canvas id="canvas-macro-donut"></canvas></div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-base font-extrabold tracking-tight">Daily Nutritional Records</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                                <th class="p-4">Date</th>
+                                <th class="p-4 text-center">Calories</th>
+                                <th class="p-4 text-center">Protein (g)</th>
+                                <th class="p-4 text-center">Carbs (g)</th>
+                                <th class="p-4 text-center">Fat (g)</th>
+                                <th class="p-4 text-center">Water (ml)</th>
+                                <th class="p-4 text-center">Steps</th>
+                                <th class="p-4 text-right no-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-nutrition-rows">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-biometrics" class="tab-content space-y-8 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-extrabold tracking-tight">Weight Progress</h2>
+                    <p class="text-sm text-slate-500">Track body changes and measurements.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl h-64 lg:col-span-2">
+                    <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Body Metrics Trends</p>
+                    <div class="h-48 relative"><canvas id="canvas-measurements"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <p class="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-4">Latest Body Changes</p>
+                        <div class="space-y-3 text-sm" id="latest-biometrics-snapshot">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-base font-extrabold tracking-tight">Historical Vital Timelines</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                                <th class="p-4">Date</th>
+                                <th class="p-4 text-center">Weight (kg)</th>
+                                <th class="p-4 text-center">Body Fat %</th>
+                                <th class="p-4 text-center">Waist (in)</th>
+                                <th class="p-4 text-center">Chest (in)</th>
+                                <th class="p-4 text-center">Arms (in)</th>
+                                <th class="p-4 text-center">Thighs (in)</th>
+                                <th class="p-4 text-right no-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-biometrics-rows">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-goals" class="tab-content space-y-8 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-extrabold tracking-tight">Goal Center</h2>
+                    <p class="text-sm text-slate-500">Configure target objectives and parameters.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl space-y-6">
+                    <h3 class="text-lg font-black tracking-tight uppercase italic">Target Metrics</h3>
+                    <form id="formGoalSetup" class="space-y-4" onsubmit="event.preventDefault(); AnalyticsEngine.updateGoalsFromForm();">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 block mb-1">GOAL TARGET TYPE</label>
+                            <select id="goal-type-input" class="w-full p-3 rounded-xl text-sm font-semibold">
+                                <option value="Weight Loss">Weight Loss</option>
+                                <option value="Weight Gain">Weight Gain</option>
+                                <option value="Muscle Gain">Muscle Gain</option>
+                                <option value="Fat Loss">Fat Loss</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 block mb-1">START MASS (KG)</label>
+                                <input type="number" step="0.1" id="goal-start-w" class="w-full p-3 rounded-xl text-sm font-semibold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 block mb-1">TARGET MASS (KG)</label>
+                                <input type="number" step="0.1" id="goal-target-w" class="w-full p-3 rounded-xl text-sm font-semibold">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 block mb-1">START DATE</label>
+                                <input type="date" id="goal-start-date" class="w-full p-3 rounded-xl text-xs font-semibold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 block mb-1">TARGET DATE</label>
+                                <input type="date" id="goal-target-date" class="w-full p-3 rounded-xl text-xs font-semibold">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl text-xs tracking-widest uppercase transition-transform active:scale-98 shadow-md">
+                            Commit Targets
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-black tracking-tight uppercase italic mb-6">Execution Pipeline Probability</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="goals-detailed-metrics">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content space-y-8 hidden">
+            <div>
+                <h2 class="text-3xl font-extrabold tracking-tight">System Controls</h2>
+                <p class="text-sm text-slate-500">Manage data structures, templates, and core states.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-6">
+                    <div>
+                        <h3 class="text-base font-extrabold tracking-tight">Data Management</h3>
+                        <p class="text-xs text-slate-400">Back up or wipe your entire history.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onclick="DatabaseEngine.exportBackupJSON()" class="bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white px-4 py-3 rounded-xl font-semibold text-xs uppercase tracking-wider transition-all">Export JSON</button>
+                        <button onclick="DatabaseEngine.exportAllCSV()" class="bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white px-4 py-3 rounded-xl font-semibold text-xs uppercase tracking-wider transition-all">Export CSV</button>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 block">Restore Database from Backup</label>
+                        <input type="file" id="input-import-json" onchange="DatabaseEngine.importBackupJSON(event)" class="w-full text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-950">
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button onclick="DatabaseEngine.resetSystemOS()" class="w-full bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white border border-red-500/20 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+                            Reset Storage Space
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-6">
+                    <div>
+                        <h3 class="text-base font-extrabold tracking-tight">System Interface Settings</h3>
+                        <p class="text-xs text-slate-400">Configure layout theme settings.</p>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-950 rounded-xl">
+                        <div>
+                            <span class="text-sm font-bold block">Interface Appearance</span>
+                            <span class="text-xs text-slate-400">Switch between dark and light screens.</span>
+                        </div>
+                        <button onclick="UIEngine.toggleGlobalTheme()" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold shadow-sm">
+                            Toggle Theme
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="no-print md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-3 z-40 shadow-xl">
+        <button onclick="UIEngine.switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center text-slate-400" data-tab="dashboard">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Summary</span>
+        </button>
+        <button onclick="UIEngine.switchTab('workouts')" class="mobile-nav-btn flex flex-col items-center text-slate-400" data-tab="workouts">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2a2.5 2.5 0 002.5-2.5V6.586M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Gym</span>
+        </button>
+        <button onclick="UIEngine.switchTab('nutrition')" class="mobile-nav-btn flex flex-col items-center text-slate-400" data-tab="nutrition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Diet</span>
+        </button>
+        <button onclick="UIEngine.switchTab('biometrics')" class="mobile-nav-btn flex flex-col items-center text-slate-400" data-tab="biometrics">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2M11 21a9 9 0 119-9 9 9 0 01-9 9z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Body</span>
+        </button>
+        <button onclick="UIEngine.switchTab('goals')" class="mobile-nav-btn flex flex-col items-center text-slate-400" data-tab="goals">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Goals</span>
+        </button>
+    </nav>
+
+    <div id="modalLogDay" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 md:p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h3 class="text-xl font-black uppercase italic tracking-tight">Log Vital Stats</h3>
+                <button onclick="UIEngine.closeModal('modalLogDay')" class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-red-500">Close</button>
+            </div>
+
+            <form id="formLogDay" class="grid grid-cols-1 md:grid-cols-3 gap-6" onsubmit="event.preventDefault(); DatabaseEngine.saveDayLogFromForm();">
+                <div class="space-y-4">
+                    <p class="text-[10px] font-black text-brand-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">General Context</p>
+                    <div><label class="text-[10px] font-bold text-slate-400 block mb-1">LOG DATE</label><input type="date" id="input-log-date" required class="w-full p-3 rounded-xl text-xs font-semibold"></div>
+                    <div><label class="text-[10px] font-bold text-slate-400 block mb-1">SLEEP DURATION (HRS)</label><input type="number" step="0.1" id="input-log-sleep" placeholder="8" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    <div><label class="text-[10px] font-bold text-slate-400 block mb-1">WATER INGESTION (ML)</label><input type="number" id="input-log-water" placeholder="3000" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    <div><label class="text-[10px] font-bold text-slate-400 block mb-1">STEPS COUNT</label><input type="number" id="input-log-steps" placeholder="10000" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Biometrics</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">WEIGHT (KG)</label><input type="number" step="0.1" id="input-log-weight" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">BODY FAT %</label><input type="number" step="0.1" id="input-log-fat" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">WAIST (IN)</label><input type="number" step="0.1" id="input-log-waist" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">CHEST (IN)</label><input type="number" step="0.1" id="input-log-chest" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">ARMS (IN)</label><input type="number" step="0.1" id="input-log-arms" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">THIGHS (IN)</label><input type="number" step="0.1" id="input-log-thighs" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <p class="text-[10px] font-black text-purple-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-1">Nutrition & Macro Breakdown</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">CALORIES</label><input type="number" id="input-log-calories" placeholder="2500" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">PROTEIN (G)</label><input type="number" id="input-log-protein" placeholder="150" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">CARBS (G)</label><input type="number" id="input-log-carbs" placeholder="200" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1">FAT (G)</label><input type="number" id="input-log-fats" placeholder="70" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                    </div>
+                    <div><label class="text-[10px] font-bold text-slate-400 block mb-1">COACH COMPLIANCE COMMENTS</label><textarea id="input-log-comments" class="w-full p-3 rounded-xl text-xs h-16 resize-none" placeholder="Enter notes..."></textarea></div>
+                </div>
+
+                <div class="md:col-span-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl text-xs tracking-widest uppercase shadow-lg shadow-brand-500/10">Commit Today's Parameters</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="print-only hidden">
-        <h2 class="text-2xl font-black uppercase mb-2">FORGEPATH ATHLETE PERFORMANCE MATRIX</h2>
-        <p class="text-xs font-bold mb-4">TARGET BIO-MASS: <span x-text="targets.weight + ' KG'"></span> | DAILY KCAL CEILING: <span x-text="targets.calories + ' KCAL'"></span></p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Temporal Node</th>
-                    <th>Mass Axis</th>
-                    <th>Waist Axis</th>
-                    <th>Sleep Latency</th>
-                    <th>Energy Ingested</th>
-                    <th>Strength Load Specifications</th>
-                    <th>Nutritional Logistics</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-for="log in getFilteredLogs()">
-                    <tr>
-                        <td x-text="log.date + ' @ ' + log.workoutTime" class="font-bold"></td>
-                        <td x-text="log.weight + ' kg'"></td>
-                        <td x-text="log.waist + ' in'"></td>
-                        <td x-text="log.sleep + ' hrs'"></td>
-                        <td x-text="calculateLogCalories(log) + ' kcal'"></td>
-                        <td>
-                            <template x-for="ex in log.exercises">
-                                <div x-text="ex.name + ' [' + ex.sets + 'Sx' + ex.reps + 'R @' + ex.weight + 'kg]'"></div>
-                            </template>
-                        </td>
-                        <td>
-                            <template x-for="(meal, index) in log.meals">
-                                <div x-text="'M' + (index+1) + ' (' + meal.time + '): ' + meal.name + ' - ' + meal.calories + 'kcal'"></div>
-                            </template>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
+    <div id="modalWorkout" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 md:p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h3 class="text-xl font-black uppercase italic tracking-tight">Record Workout Session</h3>
+                <button onclick="UIEngine.closeModal('modalWorkout')" class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-red-500">Close</button>
+            </div>
+
+            <form id="formWorkout" class="space-y-4" onsubmit="event.preventDefault(); DatabaseEngine.saveWorkoutLogFromForm();">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] font-black text-slate-400 block mb-1">WORKOUT DATE</label><input type="date" id="input-w-date" required class="w-full p-3 rounded-xl text-xs font-semibold"></div>
+                    <div><label class="text-[10px] font-black text-slate-400 block mb-1">EXERCISE NAME</label><input type="text" id="input-w-name" required placeholder="e.g. Bench Press" class="w-full p-3 rounded-xl text-sm font-semibold"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 block mb-1">MUSCLE GROUP TARGET</label>
+                        <select id="input-w-group" class="w-full p-3 rounded-xl text-sm font-semibold">
+                            <option value="Chest">Chest</option>
+                            <option value="Back">Back</option>
+                            <option value="Legs">Legs</option>
+                            <option value="Shoulders">Shoulders</option>
+                            <option value="Arms">Arms</option>
+                            <option value="Core">Core</option>
+                            <option value="Cardio">Cardio</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1 text-center">SETS</label><input type="number" id="input-w-sets" required class="w-full p-3 rounded-xl text-center font-bold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1 text-center">REPS</label><input type="number" id="input-w-reps" required class="w-full p-3 rounded-xl text-center font-bold"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block mb-1 text-center">KG</label><input type="number" step="0.5" id="input-w-weight" required class="w-full p-3 rounded-xl text-center font-black text-brand-500"></div>
+                    </div>
+                </div>
+                <div><label class="text-[10px] font-black text-slate-400 block mb-1">SESSION NOTES / RECORD COMMENTS</label><textarea id="input-w-notes" class="w-full p-3 rounded-xl text-xs h-20 resize-none" placeholder="Log sets configuration notes..."></textarea></div>
+                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl text-xs tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-brand-500/10">
+                    Sync Workout Sequence
+                </button>
+            </form>
+        </div>
     </div>
 
     <script>
-        function gymApp() {
-            return {
-                theme: localStorage.getItem('fpTheme') || 'dark',
-                showModal: false,
-                isEditing: false,
-                editId: null,
-                filterStart: '',
-                filterEnd: new Date().toISOString().split('T')[0],
-                targets: JSON.parse(localStorage.getItem('forgePathTargets')) || { days: 90, weight: 65, calories: 2500 },
-                logs: JSON.parse(localStorage.getItem('forgePathUltimateLogs_v5')) || [],
-                form: { date: '', workoutTime: '', workoutName: '', weight: '', waist: '', sleep: '', cardio: {time:'', speed:'', incline:''}, exercises: [], meals: [], comments: '' },
+        /**
+         * Global App Storage Structures Definition
+         */
+        const AppState = {
+            theme: 'dark',
+            activeTab: 'dashboard',
+            targets: { days: 90, weight: 65, calories: 2500, type: 'Weight Loss', startW: 75, startDate: '', targetDate: '' },
+            logs: [],
+            workouts: []
+        };
 
-                initApp() {
-                    const d = new Date(); d.setDate(d.getDate() - 14);
-                    this.filterStart = d.toISOString().split('T')[0];
-                    this.initCharts();
-                    this.$watch('logs', () => { this.persist(); this.initCharts(); });
-                },
-                toggleTheme() {
-                    this.theme = this.theme === 'dark' ? 'light' : 'dark';
-                    localStorage.setItem('fpTheme', this.theme);
-                    setTimeout(() => this.initCharts(), 40);
-                },
-                openNewModal() {
-                    this.isEditing = false;
-                    this.resetForm();
-                    this.form.date = new Date().toISOString().split('T')[0];
-                    this.form.workoutTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                    this.showModal = true;
-                },
-                addExerciseRow() { this.form.exercises.push({ name: '', sets: '', reps: '', weight: '' }); },
-                addMealRow() { this.form.meals.push({ name: '', time: '00:00', calories: '' }); },
-                calculateLogCalories(log) {
-                    if(!log.meals) return 0;
-                    return log.meals.reduce((sum, m) => sum + (parseInt(m.calories) || 0), 0);
-                },
-                saveEntry() {
-                    if (this.isEditing) {
-                        const idx = this.logs.findIndex(l => l.id === this.editId);
-                        this.logs[idx] = JSON.parse(JSON.stringify({ ...this.form, id: this.editId }));
-                    } else {
-                        this.logs.unshift(JSON.parse(JSON.stringify({ ...this.form, id: Date.now() })));
+        /**
+         * Database Operations Engine (LocalStorage Pipeline Wrapper)
+         */
+        const DatabaseEngine = {
+            storageKey: 'forgepath_sovereign_v1',
+            
+            initialize() {
+                const raw = localStorage.getItem(this.storageKey);
+                if (raw) {
+                    try {
+                        const parsed = JSON.parse(raw);
+                        Object.assign(AppState, parsed);
+                    } catch (e) {
+                        this.generateSeedData();
                     }
-                    this.persist();
-                    this.showModal = false;
-                },
-                editEntry(log) {
-                    this.isEditing = true;
-                    this.editId = log.id;
-                    this.form = JSON.parse(JSON.stringify(log));
-                    this.showModal = true;
-                },
-                deleteEntry(id) {
-                    if (confirm('Execute permanent data deletion sequence?')) {
-                        this.logs = this.logs.filter(l => l.id !== id);
-                        this.persist();
-                    }
-                },
-                saveTargets() {
-                    localStorage.setItem('forgePathTargets', JSON.stringify(this.targets));
-                    this.initCharts();
-                },
-                persist() {
-                    this.logs.sort((a,b) => new Date(b.date) - new Date(a.date));
-                    localStorage.setItem('forgePathUltimateLogs_v5', JSON.stringify(this.logs));
-                },
-                getFilteredLogs() {
-                    return this.logs.filter(log => log.date >= this.filterStart && log.date <= this.filterEnd);
-                },
-                formatDate(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); },
-                initCharts() {
-                    const isDark = this.theme === 'dark';
-                    const txtColor = isDark ? '#94a3b8' : '#64748b';
-                    const gridColor = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(226, 232, 240, 0.6)';
-                    const sorted = [...this.logs].reverse().slice(-14);
-                    const labels = sorted.map(l => this.formatDate(l.date));
+                } else {
+                    this.generateSeedData();
+                }
+                this.syncFormTargets();
+            },
 
-                    if (window.cW) window.cW.destroy();
-                    if (window.cWa) window.cWa.destroy();
-                    if (window.cCal) window.cCal.destroy();
+            persist() {
+                localStorage.setItem(this.storageKey, JSON.stringify(AppState));
+            },
 
-                    const buildChart = (ctx, label, data, color, targetVal) => {
-                        const datasets = [{ label, data, borderColor: color, tension: 0.4, fill: true, backgroundColor: color+'11', pointRadius: 4 }];
-                        if(targetVal) {
-                            datasets.push({ label: 'Objective Threshold', data: Array(labels.length).fill(targetVal), borderColor: '#ef4444', borderDash: [6, 6], pointRadius: 0, fill: false });
-                        }
-                        return new Chart(ctx, {
-                            type: 'line',
-                            data: { labels, datasets },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: txtColor } }, x: { grid: { display: false }, ticks: { color: txtColor } } } }
-                        });
-                    };
-
-                    window.cW = buildChart(document.getElementById('chartW'), 'Mass Trajectory', sorted.map(l => l.weight), '#3b82f6', this.targets.weight);
-                    window.cWa = buildChart(document.getElementById('chartWaist'), 'Waist Axis', sorted.map(l => l.waist), '#10b981');
-                    window.cCal = buildChart(document.getElementById('Energy Index'), 'Caloric Intake', sorted.map(l => this.calculateLogCalories(l)), '#8b5cf6', this.targets.calories);
-                },
-                exportCSV() {
-                    let csv = 'Date,Time,WorkoutName,Weight,Waist,Sleep,TotalCalories,Exercises\n';
-                    this.logs.forEach(l => {
-                        const exStr = l.exercises.map(e => `${e.name}(${e.sets}Sx${e.reps}R@${e.weight}kg)`).join(' | ');
-                        csv += `${l.date},${l.workoutTime},${l.workoutName},${l.weight},${l.waist},${l.sleep},${this.calculateLogCalories(l)},"${exStr}"\n`;
+            generateSeedData() {
+                // High-fidelity production default seed generation matching Mar-June 2026 timelines
+                const baseDate = new Date();
+                AppState.targets.startDate = new Date(baseDate.getTime() - 14 * 86400000).toISOString().split('T')[0];
+                AppState.targets.targetDate = new Date(baseDate.getTime() + 76 * 86400000).toISOString().split('T')[0];
+                
+                for(let i = 14; i >= 0; i--) {
+                    const loopDate = new Date(baseDate.getTime() - i * 86400000).toISOString().split('T')[0];
+                    AppState.logs.push({
+                        date: loopDate,
+                        workoutTime: "07:30",
+                        workoutName: i % 2 === 0 ? "Push Protocol" : "Pull Session",
+                        weight: (75 - (14 - i) * 0.15).toFixed(1),
+                        waist: (34 - (14 - i) * 0.05).toFixed(1),
+                        sleep: (7.5 + (i % 2) * 0.5).toFixed(1),
+                        fat: "18.5", chest: "40", arms: "14", thighs: "22",
+                        calories: (2300 + (i % 3) * 100),
+                        protein: (140 + (i % 2) * 15),
+                        carbs: 200, fats: 65, water: 3200, steps: 10500,
+                        comments: "High compliance shift execution metric recorded successfully."
                     });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-                    link.download = `ForgePath_Matrix_Data.csv`;
-                    link.click();
-                },
-                resetForm() { this.form = { date: '', workoutTime: '', workoutName: '', weight: '', waist: '', sleep: '', cardio: {time:'', speed:'', incline:''}, exercises: [], meals: [], comments: '' }; }
+
+                    if(i % 2 === 0) {
+                        AppState.workouts.push({
+                            date: loopDate,
+                            name: "Bench Press",
+                            group: "Chest",
+                            sets: 4, reps: 10, weight: 60 + (14 - i),
+                            notes: "Locked in dynamic progressive overload mapping criteria."
+                        });
+                    }
+                }
+                this.persist();
+            },
+
+            syncFormTargets() {
+                document.getElementById('goal-type-input').value = AppState.targets.type;
+                document.getElementById('goal-start-w').value = AppState.targets.startW;
+                document.getElementById('goal-target-w').value = AppState.targets.weight;
+                document.getElementById('goal-start-date').value = AppState.targets.startDate;
+                document.getElementById('goal-target-date').value = AppState.targets.targetDate;
+                document.getElementById('input-log-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('input-w-date').value = new Date().toISOString().split('T')[0];
+            },
+
+            saveDayLogFromForm() {
+                const date = document.getElementById('input-log-date').value;
+                const existingIdx = AppState.logs.findIndex(l => l.date === date);
+                
+                const payload = {
+                    date,
+                    workoutTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                    weight: parseFloat(document.getElementById('input-log-weight').value) || 0,
+                    fat: parseFloat(document.getElementById('input-log-fat').value) || 0,
+                    waist: parseFloat(document.getElementById('input-log-waist').value) || 0,
+                    chest: parseFloat(document.getElementById('input-log-chest').value) || 0,
+                    arms: parseFloat(document.getElementById('input-log-arms').value) || 0,
+                    thighs: parseFloat(document.getElementById('input-log-thighs').value) || 0,
+                    sleep: parseFloat(document.getElementById('input-log-sleep').value) || 0,
+                    water: parseInt(document.getElementById('input-log-water').value) || 0,
+                    steps: parseInt(document.getElementById('input-log-steps').value) || 0,
+                    calories: parseInt(document.getElementById('input-log-calories').value) || 0,
+                    protein: parseInt(document.getElementById('input-log-protein').value) || 0,
+                    carbs: parseInt(document.getElementById('input-log-carbs').value) || 0,
+                    fats: parseInt(document.getElementById('input-log-fats').value) || 0,
+                    comments: document.getElementById('input-log-comments').value || ""
+                };
+
+                if (existingIdx > -1) AppState.logs[existingIdx] = payload;
+                else AppState.logs.unshift(payload);
+
+                this.finalizeOperation('modalLogDay');
+            },
+
+            saveWorkoutLogFromForm() {
+                const payload = {
+                    date: document.getElementById('input-w-date').value,
+                    name: document.getElementById('input-w-name').value,
+                    group: document.getElementById('input-w-group').value,
+                    sets: parseInt(document.getElementById('input-w-sets').value) || 0,
+                    reps: parseInt(document.getElementById('input-w-reps').value) || 0,
+                    weight: parseFloat(document.getElementById('input-w-weight').value) || 0,
+                    notes: document.getElementById('input-w-notes').value || ""
+                };
+
+                AppState.workouts.unshift(payload);
+                this.finalizeOperation('modalWorkout');
+            },
+
+            deleteLogItem(type, index) {
+                if(confirm("Confirm deletion sequence from Local Vault?")) {
+                    if (type === 'workout') AppState.workouts.splice(index, 1);
+                    if (type === 'nutrition' || type === 'biometrics') AppState.logs.splice(index, 1);
+                    this.persist();
+                    UIEngine.renderAllTabPanels();
+                }
+            },
+
+            finalizeOperation(modalId) {
+                this.persist();
+                UIEngine.closeModal(modalId);
+                UIEngine.renderAllTabPanels();
+            },
+
+            exportBackupJSON() {
+                const blob = new Blob([JSON.stringify(AppState, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `ForgePath_OS_Vault_Backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            },
+
+            exportAllCSV() {
+                let csv = 'Type,Date,Weight,Waist,Calories,Protein,Carbs,Fats,ExerciseName,Sets,Reps,Load\n';
+                AppState.logs.forEach(l => {
+                    csv += `DailyLog,${l.date},${l.weight},${l.waist},${l.calories},${l.protein},${l.carbs},${l.fats},,,,\n`;
+                });
+                AppState.workouts.forEach(w => {
+                    csv += `Workout,${w.date},,,,,,,,${w.name},${w.sets},${w.reps},${w.weight}\n`;
+                });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                link.download = `ForgePath_Sovereign_Matrix.csv`;
+                link.click();
+            },
+
+            importBackupJSON(event) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        if (parsed.logs && parsed.workouts) {
+                            Object.assign(AppState, parsed);
+                            this.persist();
+                            location.reload();
+                        }
+                    } catch(err) {
+                        alert("Invalid structure verification crash matrix detected.");
+                    }
+                };
+                reader.readAsText(event.target.files[0]);
+            },
+
+            resetSystemOS() {
+                if(confirm("Wipe structural state? All local memory registers will clear.")) {
+                    localStorage.removeItem(this.storageKey);
+                    location.reload();
+                }
             }
-        }
+        };
+
+        /**
+         * Analytics Calculation Engine (Metrics & Linear Models Processing)
+         */
+        const AnalyticsEngine = {
+            getRollingStats() {
+                const latest = AppState.logs[0] || { weight: 0, waist: 0, sleep: 0, calories: 0, protein: 0 };
+                const weights = AppState.logs.filter(l => l.weight > 0).map(l => parseFloat(l.weight));
+                const totalLostGained = weights.length > 1 ? (weights[0] - weights[weights.length - 1]).toFixed(1) : 0;
+                
+                // Rolling macro averages computation
+                const slice7 = AppState.logs.slice(0, 7);
+                const avgCal = slice7.length ? Math.round(slice7.reduce((s, l) => s + (l.calories || 0), 0) / slice7.length) : 0;
+                const avgProt = slice7.length ? Math.round(slice7.reduce((s, l) => s + (l.protein || 0), 0) / slice7.length) : 0;
+                const avgSleep = slice7.length ? (slice7.reduce((s, l) => s + (parseFloat(l.sleep) || 0), 0) / slice7.length).toFixed(1) : 0;
+
+                // Timelines projection engine configuration
+                const start = new Date(AppState.targets.startDate);
+                const end = new Date(AppState.targets.targetDate);
+                const today = new Date();
+                const totalDays = Math.max(Math.round((end - start) / 86400000), 1);
+                const elapsedDays = Math.max(Math.round((today - start) / 86400000), 0);
+                const daysRemaining = Math.max(totalDays - elapsedDays, 0);
+
+                const currentWeight = parseFloat(latest.weight) || 0;
+                const targetWeight = parseFloat(AppState.targets.weight) || 0;
+                const weightDiff = (currentWeight - targetWeight).toFixed(1);
+                
+                let completionPercent = 0;
+                if (AppState.targets.startW !== currentWeight) {
+                    const totalDelta = AppState.targets.startW - targetWeight;
+                    const achievedDelta = AppState.targets.startW - currentWeight;
+                    completionPercent = totalDelta !== 0 ? Math.min(Math.max(Math.round((achievedDelta / totalDelta) * 100), 0), 100) : 100;
+                }
+
+                const streaks = this.calculateStreaks();
+
+                return {
+                    currentWeight, targetWeight, weightDiff, completionPercent,
+                    daysRemaining, elapsedDays, totalDays, totalLostGained,
+                    avgCal, avgProt, avgSleep, streaks
+                };
+            },
+
+            calculateStreaks() {
+                if (!AppState.logs.length) return { current: 0, best: 0 };
+                let current = 0;
+                let best = 0;
+                let matchDate = new Date();
+                
+                // Pure array reduction parsing loop
+                const loggedDates = new Set(AppState.logs.map(l => l.date));
+                
+                for (let i = 0; i < 365; i++) {
+                    const checkStr = matchDate.toISOString().split('T')[0];
+                    if (loggedDates.has(checkStr)) {
+                        current++;
+                        if (current > best) best = current;
+                    } else {
+                        if (i === 0) {
+                            // Check if yesterday is logged to continue streak verification context
+                            matchDate.setDate(matchDate.getDate() - 1);
+                            const yesterdayStr = matchDate.toISOString().split('T')[0];
+                            if (loggedDates.has(yesterdayStr)) {
+                                continue;
+                            }
+                        }
+                        break;
+                    }
+                    matchDate.setDate(matchDate.getDate() - 1);
+                }
+                return { current, best: best || current };
+            },
+
+            calculateAvg(key) {
+                if (!AppState.logs.length) return 0;
+                const valid = AppState.logs.filter(l => parseFloat(l[key]) > 0);
+                if (!valid.length) return 0;
+                return (valid.reduce((s, l) => s + parseFloat(l[key]), 0) / valid.length).toFixed(1);
+            },
+
+            updateGoalsFromForm() {
+                AppState.targets.type = document.getElementById('goal-type-input').value;
+                AppState.targets.startW = parseFloat(document.getElementById('goal-start-w').value) || 0;
+                AppState.targets.weight = parseFloat(document.getElementById('goal-target-w').value) || 0;
+                AppState.targets.startDate = document.getElementById('goal-start-date').value;
+                AppState.targets.targetDate = document.getElementById('goal-target-date').value;
+                
+                const start = new Date(AppState.targets.startDate);
+                const end = new Date(AppState.targets.targetDate);
+                AppState.targets.days = Math.max(Math.round((end - start) / 86400000), 1);
+                
+                DatabaseEngine.persist();
+                UIEngine.renderAllTabPanels();
+            },
+
+            compileAIInsights() {
+                if (AppState.logs.length < 3) {
+                    return "Database synchronization in progress. Continue logging structured data blocks to unlock engine evaluations.";
+                }
+                const stats = this.getRollingStats();
+                let insights = [];
+
+                if (stats.avgCal > AppState.targets.calories) {
+                    insights.push(`Rolling calorie averages (${stats.avgCal} kcal) exceed configured baseline parameters.`);
+                } else {
+                    insights.push("Calorie structures are optimized within target metabolic guidelines.");
+                }
+
+                if (stats.avgProt < 130) insights.push("Protein structures are low. Prioritize amino asset recovery protocols.");
+                if (parseFloat(stats.avgSleep) < 7) insights.push("Sleep thresholds are depressed. Central nervous recovery score impacted.");
+                
+                if (Math.abs(stats.weightDiff) <= 1) {
+                    insights.push("Target metric objective convergence probability verified at high precision metrics.");
+                } else {
+                    insights.push(`Projections signal target objective execution trajectory vector steady at ${stats.weightDiff} kg remaining.`);
+                }
+
+                return insights.join(' • ');
+            }
+        };
+
+        /**
+         * Heatmap Visualization Pipeline Generator
+         */
+        const HeatmapEngine = {
+            generateContributionMap() {
+                const wrapper = document.getElementById('heatmap-wrapper');
+                wrapper.innerHTML = '';
+                
+                // Renders structural 53 columns matching annual map
+                const loggedDates = new Set(AppState.logs.map(l => l.date));
+                let cursor = new Date();
+                cursor.setDate(cursor.getDate() - 364); // Move back 52 weeks
+                
+                // Align matrix cursor day bounding boxes
+                const startDay = cursor.getDay();
+                cursor.setDate(cursor.getDate() - startDay);
+
+                let html = '<div class="grid grid-flow-col grid-rows-7 gap-1 h-28">';
+                
+                for (let i = 0; i < 371; i++) {
+                    const str = cursor.toISOString().split('T')[0];
+                    const isLogged = loggedDates.has(str);
+                    const colorClass = isLogged ? 'bg-blue-500 shadow-sm shadow-blue-500/20' : 'bg-slate-200 dark:bg-slate-800/60';
+                    
+                    html += `<div class="w-3 h-3 rounded-sm ${colorClass} transition-colors duration-300" title="${str}"></div>`;
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                
+                html += '</div>';
+                wrapper.innerHTML = html;
+            }
+        };
+
+        /**
+         * ChartJS Life-Cycle Implementation Context
+         */
+        const ChartManager = {
+            instances: {},
+
+            build(id, type, config) {
+                if (this.instances[id]) this.instances[id].destroy();
+                const ctx = document.getElementById(id);
+                if (ctx) {
+                    this.instances[id] = new Chart(ctx, config);
+                }
+            },
+
+            syncGlobalCharts(theme) {
+                const isDark = theme === 'dark';
+                const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+                const textScaleColor = isDark ? '#64748b' : '#94a3b8';
+
+                const reversedLogs = [...AppState.logs].reverse().slice(-14);
+                const labels = reversedLogs.map(l => l.date.split('-').slice(1).join('/'));
+
+                // Chart configurations pipeline
+                const axisThemeConfig = {
+                    x: { grid: { display: false }, ticks: { color: textScaleColor, font: { size: 10 } } },
+                    y: { grid: { color: gridColor }, ticks: { color: textScaleColor, font: { size: 10 } } }
+                };
+
+                const datasetOptions = (label, data, color) => ({
+                    label, data, borderColor: color, backgroundColor: color + '15',
+                    fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
+                });
+
+                // 1. Core Weight Chart
+                this.build('canvas-weight', 'line', {
+                    type: 'line',
+                    data: { labels, datasets: [datasetOptions('Weight Progress (kg)', reversedLogs.map(l => l.weight), '#3b82f6')] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisThemeConfig }
+                });
+
+                // 2. Calorie Tracking Configuration
+                this.build('canvas-calories', 'line', {
+                    type: 'line',
+                    data: { labels, datasets: [datasetOptions('Calories consumed', reversedLogs.map(l => l.calories), '#8b5cf6')] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisThemeConfig }
+                });
+
+                // 3. Protein Execution Layout
+                this.build('canvas-protein', 'line', {
+                    type: 'line',
+                    data: { labels, datasets: [datasetOptions('Protein intake (g)', reversedLogs.map(l => l.protein), '#3b82f6')] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisThemeConfig }
+                });
+
+                // 4. Total Volume Trends Analysis
+                const workoutsReversed = [...AppState.workouts].reverse().slice(-10);
+                this.build('canvas-volume', 'bar', {
+                    type: 'bar',
+                    data: {
+                        labels: workoutsReversed.map(w => w.date.split('-').slice(1).join('/') + ` ${w.name}`),
+                        datasets: [{ label: 'Workout volume', data: workoutsReversed.map(w => (w.sets * w.reps * w.weight)), backgroundColor: '#3b82f6', borderRadius: 6 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axisThemeConfig }
+                });
+
+                // 5. Body Matrix Breakdown Tracker
+                this.build('canvas-measurements', 'line', {
+                    type: 'line',
+                    data: { 
+                        labels, 
+                        datasets: [
+                            datasetOptions('Waist (in)', reversedLogs.map(l => l.waist), '#10b981'),
+                            datasetOptions('Chest (in)', reversedLogs.map(l => l.chest), '#3b82f6')
+                        ] 
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: textScaleColor, font: { size: 9 } } } }, scales: axisThemeConfig }
+                });
+
+                // 6. Macro Distribution Architecture Gauge
+                const latest = AppState.logs[0] || { protein: 150, carbs: 200, fats: 70 };
+                this.build('canvas-macro-donut', 'doughnut', {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Protein', 'Carbs', 'Fat'],
+                        datasets: [{
+                            data: [parseInt(latest.protein) || 1, parseInt(latest.carbs) || 1, parseInt(latest.fats) || 1],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textScaleColor, font: { size: 10 } } } } }
+                });
+            }
+        };
+
+        /**
+         * System Layout UI Interaction Controller Engine
+         */
+        const UIEngine = {
+            init() {
+                DatabaseEngine.initialize();
+                this.applySavedSystemTheme();
+                this.switchTab(AppState.activeTab || 'dashboard');
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            applySavedSystemTheme() {
+                document.documentElement.classList.toggle('dark', AppState.theme === 'dark');
+            },
+
+            toggleGlobalTheme() {
+                AppState.theme = AppState.theme === 'dark' ? 'light' : 'dark';
+                DatabaseEngine.persist();
+                this.applySavedSystemTheme();
+                ChartManager.syncGlobalCharts(AppState.theme);
+            },
+
+            switchTab(tabId) {
+                AppState.activeTab = tabId;
+                DatabaseEngine.persist();
+                
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                const targetingTab = document.getElementById(`tab-${tabId}`);
+                if(targetingTab) targetingTab.classList.remove('hidden');
+
+                // Sync navigation button presentation tracking configurations
+                document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(btn => {
+                    const active = btn.getAttribute('data-tab') === tabId;
+                    if(btn.classList.contains('nav-btn')) {
+                        btn.classList.toggle('bg-brand-50', active);
+                        btn.classList.toggle('text-brand-600', active);
+                        btn.classList.toggle('dark:bg-slate-800', active);
+                        btn.classList.toggle('dark:text-white', active);
+                        btn.classList.toggle('text-slate-600', !active);
+                        btn.classList.toggle('dark:text-slate-400', !active);
+                    } else {
+                        btn.classList.toggle('text-brand-500', active);
+                        btn.classList.toggle('text-slate-400', !active);
+                    }
+                });
+
+                this.renderAllTabPanels();
+            },
+
+            openModal(modalId) {
+                const target = document.getElementById(modalId);
+                if(target) target.classList.remove('hidden');
+            },
+
+            closeModal(modalId) {
+                const target = document.getElementById(modalId);
+                if(target) target.classList.add('hidden');
+            },
+
+            renderAllTabPanels() {
+                const rolling = AnalyticsEngine.getRollingStats();
+                
+                // Dashboard execution parameters mapping context
+                document.getElementById('dashboard-date-display').innerText = `Challenge Timeline Vector Tracking Node: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+                document.getElementById('ai-insights-box').innerText = AnalyticsEngine.compileAIInsights();
+                
+                document.getElementById('streak-current-display').innerText = `${rolling.streaks.current} Days`;
+                document.getElementById('streak-best-display').innerText = `${rolling.streaks.best} Days`;
+
+                const metricsGrid = document.getElementById('dashboard-stats-grid');
+                if(metricsGrid) {
+                    metricsGrid.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Current Weight</span>
+                            <h3 class="text-2xl font-black mt-1">${rolling.currentWeight} <span class="text-xs font-normal text-slate-400">kg</span></h3>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Goal Progress</span>
+                            <h3 class="text-2xl font-black mt-1">${rolling.completionPercent}%</h3>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full overflow-hidden mt-2">
+                                <div class="bg-brand-500 h-full" style="width: ${rolling.completionPercent}%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Target Variance</span>
+                            <h3 class="text-2xl font-black mt-1 ${parseFloat(rolling.weightDiff) <= 0 ? 'text-emerald-500' : 'text-brand-500'}">${rolling.weightDiff > 0 ? '+' : ''}${rolling.weightDiff} <span class="text-xs font-normal text-slate-400">kg</span></h3>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">Time Left</span>
+                            <h3 class="text-2xl font-black mt-1">${rolling.daysRemaining} <span class="text-xs font-normal text-slate-400">Days</span></h3>
+                        </div>
+                    `;
+                }
+
+                // Render lists context loops
+                this.renderFeeds();
+                this.renderTables();
+                
+                // Refresh Heatmaps & Analytics graphs mapping matrices
+                HeatmapEngine.generateContributionMap();
+                ChartManager.syncGlobalCharts(AppState.theme);
+            },
+
+            renderFeeds() {
+                const wFeed = document.getElementById('timeline-workouts');
+                if(wFeed) {
+                    wFeed.innerHTML = AppState.workouts.slice(0, 3).map(w => `
+                        <div class="py-3 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-slate-900 dark:text-slate-100 block">${w.name}</span>
+                                <span class="text-slate-400">${w.group} • ${w.date}</span>
+                            </div>
+                            <span class="font-black text-brand-500 bg-brand-500/10 px-2 py-1 rounded">${w.sets}×${w.reps} @ ${w.weight}kg</span>
+                        </div>
+                    `).join('') || '<p class="text-xs text-slate-400 py-2">No execution sequences recorded.</p>';
+                }
+
+                const nFeed = document.getElementById('timeline-nutrition');
+                if(nFeed) {
+                    nFeed.innerHTML = AppState.logs.slice(0, 3).map(l => `
+                        <div class="py-3 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-slate-900 dark:text-slate-100 block">${l.calories || 0} kcal Ingested</span>
+                                <span class="text-slate-400">${l.date} • P: ${l.protein || 0}g C: ${l.carbs || 0}g</span>
+                            </div>
+                            <span class="text-slate-400 font-medium">${l.water || 0} ml H2O</span>
+                        </div>
+                    `).join('') || '<p class="text-xs text-slate-400 py-2">No nutrition items logged.</p>';
+                }
+            },
+
+            renderTables() {
+                // Workout Table Matrix Injection Loop
+                const wTable = document.getElementById('table-workout-rows');
+                if(wTable) {
+                    wTable.innerHTML = AppState.workouts.map((w, i) => `
+                        <tr class="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                            <td class="p-4 font-medium">${w.date}</td>
+                            <td class="p-4 font-bold uppercase tracking-tight">${w.name}</td>
+                            <td class="p-4"><span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 font-medium">${w.group}</span></td>
+                            <td class="p-4 text-center font-bold">${w.sets} × ${w.reps}</td>
+                            <td class="p-4 text-center text-brand-500 font-extrabold">${w.weight} kg</td>
+                            <td class="p-4 text-center font-black">${w.sets * w.reps * w.weight}</td>
+                            <td class="p-4 text-right no-print"><button onclick="DatabaseEngine.deleteLogItem('workout', ${i})" class="text-xs font-bold text-red-500 hover:underline">Delete</button></td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="7" class="p-8 text-center text-xs text-slate-400">Empty Resistance Log Matrix</td></tr>';
+                }
+
+                // Nutrition Table Data Inserter
+                const nTable = document.getElementById('table-nutrition-rows');
+                if(nTable) {
+                    nTable.innerHTML = AppState.logs.map((l, i) => `
+                        <tr class="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                            <td class="p-4 font-medium">${l.date}</td>
+                            <td class="p-4 text-center font-bold text-purple-500">${l.calories || 0}</td>
+                            <td class="p-4 text-center font-medium">${l.protein || 0}</td>
+                            <td class="p-4 text-center font-medium">${l.carbs || 0}</td>
+                            <td class="p-4 text-center font-medium">${l.fats || 0}</td>
+                            <td class="p-4 text-center text-brand-500 font-semibold">${l.water || 0}</td>
+                            <td class="p-4 text-center text-emerald-500 font-bold">${l.steps || 0}</td>
+                            <td class="p-4 text-right no-print"><button onclick="DatabaseEngine.deleteLogItem('nutrition', ${i})" class="text-xs font-bold text-red-500 hover:underline">Delete</button></td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="8" class="p-8 text-center text-xs text-slate-400">Empty Nutrition Data Logs</td></tr>';
+                }
+
+                // Biometrics Table Renderer Loop
+                const bTable = document.getElementById('table-biometrics-rows');
+                if(bTable) {
+                    bTable.innerHTML = AppState.logs.map((l, i) => `
+                        <tr class="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                            <td class="p-4 font-medium">${l.date}</td>
+                            <td class="p-4 text-center font-black text-brand-500">${l.weight || '--'}</td>
+                            <td class="p-4 text-center font-semibold">${l.fat || '--'}%</td>
+                            <td class="p-4 text-center">${l.waist || '--'}</td>
+                            <td class="p-4 text-center">${l.chest || '--'}</td>
+                            <td class="p-4 text-center">${l.arms || '--'}</td>
+                            <td class="p-4 text-center">${l.thighs || '--'}</td>
+                            <td class="p-4 text-right no-print"><button onclick="DatabaseEngine.deleteLogItem('biometrics', ${i})" class="text-xs font-bold text-red-500 hover:underline">Delete</button></td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="8" class="p-8 text-center text-xs text-slate-400">Empty Biometrics Matrix</td></tr>';
+                }
+
+                // PR Highlights Display Box Parser Engine
+                const prContainer = document.getElementById('pr-list-container');
+                if(prContainer) {
+                    const prs = {};
+                    AppState.workouts.forEach(w => {
+                        if(!prs[w.name] || w.weight > prs[w.name].weight) {
+                            prs[w.name] = w;
+                        }
+                    });
+                    prContainer.innerHTML = Object.values(prs).map(w => `
+                        <div class="flex justify-between items-center text-xs bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <span class="font-bold uppercase tracking-tight">${w.name}</span>
+                            <span class="font-black text-emerald-500">${w.weight} kg</span>
+                        </div>
+                    `).join('') || '<p class="text-xs text-slate-400 py-2">No data thresholds encountered.</p>';
+                }
+
+                // Detailed Bio Changes Snapshot Card
+                const bioSnapshot = document.getElementById('latest-biometrics-snapshot');
+                if(bioSnapshot) {
+                    bioSnapshot.innerHTML = `
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Average Weight</span><strong class="text-brand-500">${AnalyticsEngine.calculateAvg('weight')} kg</strong></div>
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Average Waistline</span><strong class="text-emerald-500">${AnalyticsEngine.calculateAvg('waist')} in</strong></div>
+                        <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"><span>Average Sleep</span><strong>${AnalyticsEngine.calculateAvg('sleep')} hrs</strong></div>
+                    `;
+                }
+
+                // Goals Data Mapping Rendering Grid Columns
+                const goalsDetailed = document.getElementById('goals-detailed-metrics');
+                if(goalsDetailed) {
+                    const stats = AnalyticsEngine.getRollingStats();
+                    goalsDetailed.innerHTML = `
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Start Target Milestone</span>
+                            <p class="text-xl font-extrabold mt-1">${AppState.targets.startW} kg <span class="text-xs font-normal text-slate-400">on ${AppState.targets.startDate || '--'}</span></p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Objective Endpoint Target</span>
+                            <p class="text-xl font-extrabold mt-1">${AppState.targets.weight} kg <span class="text-xs font-normal text-slate-400">on ${AppState.targets.targetDate || '--'}</span></p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Elapsed Time Allocation</span>
+                            <p class="text-xl font-extrabold mt-1">${stats.elapsedDays} Days <span class="text-xs font-normal text-slate-400">passed</span></p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Required Change Vectors</span>
+                            <p class="text-xl font-extrabold mt-1">${stats.weightDiff} kg <span class="text-xs font-normal text-slate-400">remaining</span></p>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        // Initialize Operational Hooks on System Launch Sequence
+        window.addEventListener('DOMContentLoaded', () => UIEngine.init());
     </script>
 </body>
 </html>
