@@ -153,7 +153,7 @@
                         onAuthStateChanged }                         = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
                 const { getFirestore, doc, setDoc, getDoc,
                         collection, query, where, getDocs,
-                        addDoc, deleteDoc }                          = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+                        addDoc, deleteDoc, onSnapshot }              = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
                 const app  = initializeApp(cfg);
                 const auth = getAuth(app);
@@ -165,7 +165,7 @@
                     signInWithEmailAndPassword,
                     signOut,
                     onAuthStateChanged,
-                    doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc
+                    doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, onSnapshot
                 };
 
                 onAuthStateChanged(auth, user => {
@@ -712,9 +712,11 @@
                                         <td class="p-4 text-center text-brand-500 font-black" x-text="getTopWeight(w.sets) + ' kg'"></td>
                                         <td class="p-4 text-center text-emerald-500 font-bold text-xs">
                                             <span x-show="w.workoutType === 'cycling'" x-text="(w.cycling && w.cycling.distanceKm ? w.cycling.distanceKm + 'km' : '') + (w.cycling && w.cycling.durationMin ? ' ' + w.cycling.durationMin + 'min' : '')"></span>
-                                            <span x-show="w.workoutType !== 'cycling'" x-text="(w.cardio && w.cardio.time > 0) ? w.cardio.time + 'm @ ' + (w.cardio.speed||0) + 'kph' : '--'"></span>
+                                            <span x-show="w.workoutType === 'running'" x-text="(w.running && w.running.distanceKm ? w.running.distanceKm + 'km' : '') + (w.running && w.running.durationMin ? ' ' + w.running.durationMin + 'min' : '')"></span>
+                                            <span x-show="w.workoutType === 'walking'" x-text="(w.walking && w.walking.distanceKm ? w.walking.distanceKm + 'km' : '') + (w.walking && w.walking.steps ? ' ' + w.walking.steps + ' steps' : '')"></span>
+                                            <span x-show="w.workoutType !== 'cycling' && w.workoutType !== 'running' && w.workoutType !== 'walking'" x-text="(w.cardio && w.cardio.time > 0) ? w.cardio.time + 'm @ ' + (w.cardio.speed||0) + 'kph' : '--'"></span>
                                         </td>
-                                        <td class="p-4 text-center font-black" x-text="w.workoutType === 'cycling' ? (w.cycling && w.cycling.distanceKm ? w.cycling.distanceKm + ' km' : '--') : calculateVolume(w.sets) + ' kg'"></td>
+                                        <td class="p-4 text-center font-black" x-text="w.workoutType === 'cycling' ? (w.cycling && w.cycling.distanceKm ? w.cycling.distanceKm + ' km' : '--') : (w.workoutType === 'running' ? (w.running && w.running.distanceKm ? w.running.distanceKm + ' km' : '--') : (w.workoutType === 'walking' ? (w.walking && w.walking.distanceKm ? w.walking.distanceKm + ' km' : '--') : calculateVolume(w.sets) + ' kg'))"></td>
                                         <td class="p-4 text-right no-print space-x-2">
                                             <button @click="editWorkout(w.id)" class="text-brand-500 font-bold hover:underline">Edit</button>
                                             <button @click="duplicateRecord('workout', w.id)" class="text-emerald-500 font-bold hover:underline">Clone</button>
@@ -1022,6 +1024,7 @@
                                     <div>
                                         <h4 class="font-extrabold text-sm tracking-tight" x-text="ch.name"></h4>
                                         <p class="text-[10px] text-slate-400 mt-0.5" x-text="ch.startDate + ' → ' + ch.endDate"></p>
+                                        <p class="text-[9px] text-brand-400 font-bold mt-0.5" x-text="ch.role === 'sender' ? 'You challenged ' + ch.receiverEmail : 'Challenged by ' + (ch.senderName || ch.senderEmail)"></p>
                                     </div>
                                     <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
                                           :class="ch.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'"
@@ -1030,14 +1033,14 @@
                                 <!-- Versus display -->
                                 <div class="flex items-center gap-3">
                                     <div class="flex-1 text-center bg-brand-500/10 rounded-xl p-3">
-                                        <p class="text-[9px] font-black text-brand-400 uppercase tracking-wider mb-1" x-text="ch.myName || 'You'"></p>
+                                        <p class="text-[9px] font-black text-brand-400 uppercase tracking-wider mb-1 truncate" x-text="getChallengeMyLabel(ch)"></p>
                                         <p class="text-2xl font-black text-brand-500" x-text="getChallengeProgress(ch)"></p>
                                         <p class="text-[9px] text-slate-400" x-text="ch.metric"></p>
                                     </div>
                                     <div class="text-slate-400 font-black text-lg">VS</div>
                                     <div class="flex-1 text-center bg-orange-500/10 rounded-xl p-3">
-                                        <p class="text-[9px] font-black text-orange-400 uppercase tracking-wider mb-1 truncate" x-text="ch.friendEmail"></p>
-                                        <p class="text-2xl font-black text-orange-500" x-text="ch.friendScore || 0"></p>
+                                        <p class="text-[9px] font-black text-orange-400 uppercase tracking-wider mb-1 truncate" x-text="getChallengeOpponentLabel(ch)"></p>
+                                        <p class="text-2xl font-black text-orange-500" x-text="getChallengeOpponentScore(ch)"></p>
                                         <p class="text-[9px] text-slate-400" x-text="ch.metric"></p>
                                     </div>
                                 </div>
@@ -1067,7 +1070,7 @@
                         <div class="flex gap-3"><span class="text-brand-500 font-black">2.</span><span>Your friend signs up or logs into Vytara with that email.</span></div>
                         <div class="flex gap-3"><span class="text-brand-500 font-black">3.</span><span>They'll see the challenge appear in their Challenges tab automatically.</span></div>
                     </div>
-                    <p class="text-[10px] text-slate-400 italic">Note: Real-time score sync requires Firebase to be configured. Without it, challenges are tracked locally.</p>
+                    <p class="text-[10px] text-slate-400 italic">Note: Both you and your friend must be signed in with Firebase for real-time score sync. Scores update automatically whenever either participant logs a workout, diet, or metric entry.</p>
                 </div>
             </div>
 
@@ -1342,21 +1345,27 @@
                 <!-- Workout Type Selector -->
                 <div>
                     <label class="text-[9px] font-black text-slate-400 block mb-2 uppercase tracking-widest">Workout Type</label>
-                    <div class="flex gap-2">
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         <button type="button" @click="workoutForm.type='strength'"
                             :class="workoutForm.type==='strength' ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🏋️ Strength</button>
+                            class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🏋️ Strength</button>
+                        <button type="button" @click="workoutForm.type='running'"
+                            :class="workoutForm.type==='running' ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
+                            class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🏃 Running</button>
+                        <button type="button" @click="workoutForm.type='walking'"
+                            :class="workoutForm.type==='walking' ? 'bg-teal-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
+                            class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🚶 Walking</button>
                         <button type="button" @click="workoutForm.type='cardio'"
                             :class="workoutForm.type==='cardio' ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🏃 Cardio</button>
+                            class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">⚡ Cardio</button>
                         <button type="button" @click="workoutForm.type='cycling'"
                             :class="workoutForm.type==='cycling' ? 'bg-orange-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🚴 Cycling</button>
+                            class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all">🚴 Cycling</button>
                     </div>
                 </div>
 
                 <!-- Muscle Groups (Strength + Cardio) -->
-                <div x-show="workoutForm.type !== 'cycling'">
+                <div x-show="workoutForm.type !== 'cycling' && workoutForm.type !== 'running' && workoutForm.type !== 'walking'">
                     <label class="text-[9px] font-black text-slate-400 block mb-2 uppercase tracking-widest">Muscle Groups Worked</label>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                         <template x-for="m in systemMuscleGroups" :key="m">
@@ -1387,6 +1396,22 @@
                     <div class="text-center"><label class="text-[9px] font-black text-orange-400 block mb-1">DISTANCE (KM)</label><input type="number" step="any" x-model="workoutForm.cycling.distanceKm" min="0" class="text-center font-bold"></div>
                     <div class="text-center"><label class="text-[9px] font-black text-orange-400 block mb-1">AVG SPEED (KPH)</label><input type="number" step="any" x-model="workoutForm.cycling.avgSpeedKph" min="0" class="text-center font-bold"></div>
                     <div class="text-center"><label class="text-[9px] font-black text-orange-400 block mb-1">RESISTANCE (1-20)</label><input type="number" x-model="workoutForm.cycling.resistance" min="1" max="20" class="text-center font-bold"></div>
+                </div>
+
+                <!-- RUNNING FIELDS -->
+                <div x-show="workoutForm.type==='running'" class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-rose-500/5 border border-rose-500/20 p-4 rounded-2xl">
+                    <div class="text-center"><label class="text-[9px] font-black text-rose-400 block mb-1">DURATION (MIN) *</label><input type="number" x-model="workoutForm.running.durationMin" min="1" class="text-center font-black"></div>
+                    <div class="text-center"><label class="text-[9px] font-black text-rose-400 block mb-1">DISTANCE (KM)</label><input type="number" step="any" x-model="workoutForm.running.distanceKm" min="0" class="text-center font-bold"></div>
+                    <div class="text-center"><label class="text-[9px] font-black text-rose-400 block mb-1">AVG PACE (min/km)</label><input type="number" step="any" x-model="workoutForm.running.paceMinkm" min="0" class="text-center font-bold"></div>
+                    <div class="text-center"><label class="text-[9px] font-black text-rose-400 block mb-1">CALORIES BURNED</label><input type="number" x-model="workoutForm.running.caloriesBurned" min="0" class="text-center font-bold"></div>
+                </div>
+
+                <!-- WALKING FIELDS -->
+                <div x-show="workoutForm.type==='walking'" class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-teal-500/5 border border-teal-500/20 p-4 rounded-2xl">
+                    <div class="text-center"><label class="text-[9px] font-black text-teal-400 block mb-1">DURATION (MIN) *</label><input type="number" x-model="workoutForm.walking.durationMin" min="1" class="text-center font-black"></div>
+                    <div class="text-center"><label class="text-[9px] font-black text-teal-400 block mb-1">DISTANCE (KM)</label><input type="number" step="any" x-model="workoutForm.walking.distanceKm" min="0" class="text-center font-bold"></div>
+                    <div class="text-center"><label class="text-[9px] font-black text-teal-400 block mb-1">STEPS</label><input type="number" x-model="workoutForm.walking.steps" min="0" class="text-center font-bold"></div>
+                    <div class="text-center"><label class="text-[9px] font-black text-teal-400 block mb-1">CALORIES BURNED</label><input type="number" x-model="workoutForm.walking.caloriesBurned" min="0" class="text-center font-bold"></div>
                 </div>
 
                 <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-4 rounded-xl text-xs tracking-widest uppercase transition-all shadow-lg">Save Workout</button>
@@ -1444,7 +1469,9 @@
                 metricsForm: { editId: '', date: '', weight: '', waist: '', chest: '', arms: '', bodyFat: '', sleep: '', steps: '' },
                 workoutForm: { editId: '', date: '', name: '', type: 'strength', muscles: [], sets: '', reps: '', weight: '',
                     cardio: { time: '', speed: '', incline: '' },
-                    cycling: { distanceKm: '', durationMin: '', avgSpeedKph: '', resistance: '' } },
+                    cycling: { distanceKm: '', durationMin: '', avgSpeedKph: '', resistance: '' },
+                    running: { durationMin: '', distanceKm: '', paceMinkm: '', caloriesBurned: '' },
+                    walking: { durationMin: '', distanceKm: '', steps: '', caloriesBurned: '' } },
                 goalsForm: { targetWeight: '', targetBodyFat: '', targetDate: '',
                     calTarget: '', proteinTarget: '', carbsTarget: '', fatTarget: '', fiberTarget: '' },
                 // Challenges/friends state
@@ -1515,6 +1542,11 @@
                             } catch (err) {
                                 console.error('Firestore load error:', err);
                             }
+                            // Load challenges from Firestore after sign-in
+                            await this.loadFirestoreChallenges();
+                            await this.syncChallengeScores();
+                            // Start real-time listener for challenge score updates
+                            this.startChallengeListener();
                         }
                     });
                 },
@@ -1662,6 +1694,8 @@
                     }));
                     // Also sync to Firestore if signed in
                     this.persistCloud();
+                    // Sync challenge scores whenever data changes
+                    this.syncChallengeScores();
                 },
 
                 setDefaultDates() {
@@ -1730,6 +1764,10 @@
                 switchTab(tabId) {
                     this.activeTab = tabId;
                     this.persist();
+                    if (tabId === 'challenges') {
+                        // Refresh challenge data from Firestore every time the tab opens
+                        this.loadFirestoreChallenges().then(() => this.syncChallengeScores());
+                    }
                     if (tabId === 'goals') {
                         this.goalsForm.targetWeight  = this.profile.targetWeight || '';
                         this.goalsForm.targetBodyFat = this.profile.targetBodyFat || '';
@@ -1752,6 +1790,8 @@
                         const today = this.getLogicalToday();
                         this.workoutForm = { editId: '', date: today, name: '', type: 'strength', muscles: [], sets: '', reps: '', weight: '',
                             cardio: { time: '', speed: '', incline: '' },
+                            running: { durationMin: '', distanceKm: '', paceMinkm: '', caloriesBurned: '' },
+                            walking: { durationMin: '', distanceKm: '', steps: '', caloriesBurned: '' },
                             cycling: { distanceKm: '', durationMin: '', avgSpeedKph: '', resistance: '' } };
                     }
                     if (id === 'modalDiet') {
@@ -1910,12 +1950,13 @@
                             setsArr.push({ reps: parseInt(this.workoutForm.reps), weight: parseFloat(this.workoutForm.weight)||0 });
                         }
                     }
+                    const defaultMuscles = { cycling: ['Legs/Cardio'], running: ['Cardio/Full Body'], walking: ['Cardio/Legs'] };
                     const payload = {
                         id: this.workoutForm.editId || 'workout_' + Date.now(),
                         date: this.workoutForm.date,
                         name: this.workoutForm.name,
                         workoutType: wType,
-                        muscles: this.workoutForm.muscles.length ? this.workoutForm.muscles : (wType === 'cycling' ? ['Legs/Cardio'] : ['Cardio']),
+                        muscles: this.workoutForm.muscles.length ? this.workoutForm.muscles : (defaultMuscles[wType] || ['Cardio']),
                         sets: setsArr,
                         cardio: {
                             time: Number(this.workoutForm.cardio.time) || 0,
@@ -1927,6 +1968,18 @@
                             durationMin: parseFloat(this.workoutForm.cycling.durationMin) || 0,
                             avgSpeedKph: parseFloat(this.workoutForm.cycling.avgSpeedKph) || 0,
                             resistance: parseInt(this.workoutForm.cycling.resistance) || 0
+                        },
+                        running: {
+                            distanceKm: parseFloat(this.workoutForm.running.distanceKm) || 0,
+                            durationMin: parseFloat(this.workoutForm.running.durationMin) || 0,
+                            paceMinkm: parseFloat(this.workoutForm.running.paceMinkm) || 0,
+                            caloriesBurned: parseInt(this.workoutForm.running.caloriesBurned) || 0
+                        },
+                        walking: {
+                            distanceKm: parseFloat(this.workoutForm.walking.distanceKm) || 0,
+                            durationMin: parseFloat(this.workoutForm.walking.durationMin) || 0,
+                            steps: parseInt(this.workoutForm.walking.steps) || 0,
+                            caloriesBurned: parseInt(this.workoutForm.walking.caloriesBurned) || 0
                         }
                     };
                     if (this.workoutForm.editId) {
@@ -1948,13 +2001,15 @@
                             editId: t.id, 
                             date: t.date, 
                             name: t.name, 
-                            type: t.workoutType || (t.cycling && t.cycling.distanceKm ? 'cycling' : t.cardio && t.cardio.time ? 'cardio' : 'strength'),
+                            type: t.workoutType || (t.cycling && t.cycling.distanceKm ? 'cycling' : t.running && t.running.durationMin ? 'running' : t.walking && t.walking.durationMin ? 'walking' : t.cardio && t.cardio.time ? 'cardio' : 'strength'),
                             muscles: [...(t.muscles || t.muscleGroups || [])], 
                             sets: t.sets ? t.sets.length : 0, 
                             reps: (t.sets && t.sets[0]) ? t.sets[0].reps : 1, 
                             weight: (t.sets && t.sets[0]) ? t.sets[0].weight : 0,
                             cardio: t.cardio ? { ...t.cardio } : { time: '', speed: '', incline: '' },
-                            cycling: t.cycling ? { ...t.cycling } : { distanceKm: '', durationMin: '', avgSpeedKph: '', resistance: '' }
+                            cycling: t.cycling ? { ...t.cycling } : { distanceKm: '', durationMin: '', avgSpeedKph: '', resistance: '' },
+                            running: t.running ? { ...t.running } : { durationMin: '', distanceKm: '', paceMinkm: '', caloriesBurned: '' },
+                            walking: t.walking ? { ...t.walking } : { durationMin: '', distanceKm: '', steps: '', caloriesBurned: '' }
                         };
                         this.activeModal = 'modalWorkout';
                     }
@@ -2122,34 +2177,91 @@
                 },
 
                 // ──── CHALLENGE / FRIENDS METHODS ────
-                sendChallenge() {
+                async sendChallenge() {
                     const { friendEmail, name, durationDays, metric } = this.challengeForm;
                     if (!friendEmail || !name) { alert('Please enter friend email and challenge name.'); return; }
+                    if (!window._fb || !this.firebaseUser) { alert('You must be signed in to send challenges to friends. Please sign in first.'); return; }
+                    const myEmail = this.firebaseUser.email;
+                    const endDateStr = (() => { const d = new Date(); d.setDate(d.getDate() + (parseInt(durationDays)||30)); return d.toISOString().split('T')[0]; })();
                     const challenge = {
-                        id: 'ch_' + Date.now(),
+                        id: 'ch_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
                         name: name.trim(),
-                        friendEmail: friendEmail.trim().toLowerCase(),
-                        myEmail: this.firebaseUser ? this.firebaseUser.email : (this.profile.email || 'local'),
-                        myName: this.profile.name || 'Me',
+                        senderEmail: myEmail,
+                        senderName: this.profile.name || myEmail,
+                        receiverEmail: friendEmail.trim().toLowerCase(),
                         metric,
                         durationDays: parseInt(durationDays) || 30,
                         startDate: this.getToday(),
-                        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + (parseInt(durationDays)||30)); return d.toISOString().split('T')[0]; })(),
-                        myScore: 0,
-                        friendScore: 0,
+                        endDate: endDateStr,
                         status: 'active',
                         createdAt: Date.now()
                     };
-                    this.challenges.unshift(challenge);
-                    this.persist();
-                    // If Firebase configured, write to Firestore invites collection
-                    if (window._fb && this.firebaseUser) {
+                    try {
                         const { db, collection, addDoc } = window._fb;
-                        addDoc(collection(db, 'challenges'), { ...challenge, inviteEmail: friendEmail.trim().toLowerCase() })
-                            .catch(e => console.warn('Challenge Firestore write:', e));
+                        // Write to shared "challenges" collection — both participants can read it
+                        const ref = await addDoc(collection(db, 'challenges'), challenge);
+                        // Also store locally with Firestore doc id
+                        challenge.firestoreId = ref.id;
+                        this.challenges.unshift({ ...challenge, role: 'sender' });
+                        this.persist();
+                        this.challengeForm = { friendEmail: '', name: '', durationDays: 30, metric: 'workouts' };
+                        alert('✅ Challenge sent to ' + friendEmail + '! They will see it in their Challenges tab when they open the app.');
+                    } catch(e) {
+                        console.error('Challenge send failed:', e);
+                        alert('Failed to send challenge: ' + e.message);
                     }
-                    this.challengeForm = { friendEmail: '', name: '', durationDays: 30, metric: 'workouts' };
-                    alert('Challenge sent! Your friend will see it when they log in with ' + friendEmail);
+                },
+
+                // Pull challenges from Firestore where current user is sender or receiver
+                async loadFirestoreChallenges() {
+                    if (!window._fb || !this.firebaseUser) return;
+                    const { db, collection, query, where, getDocs } = window._fb;
+                    const myEmail = this.firebaseUser.email.toLowerCase();
+                    try {
+                        // Challenges I sent
+                        const sentQ = query(collection(db, 'challenges'), where('senderEmail', '==', myEmail));
+                        const sentSnap = await getDocs(sentQ);
+                        // Challenges sent to me
+                        const recvQ = query(collection(db, 'challenges'), where('receiverEmail', '==', myEmail));
+                        const recvSnap = await getDocs(recvQ);
+
+                        const allDocs = [];
+                        sentSnap.forEach(d => allDocs.push({ firestoreId: d.id, ...d.data(), role: 'sender' }));
+                        recvSnap.forEach(d => allDocs.push({ firestoreId: d.id, ...d.data(), role: 'receiver' }));
+
+                        // Merge: keep local challenges not yet in Firestore, replace with Firestore versions
+                        const fsIds = new Set(allDocs.map(c => c.firestoreId));
+                        const localOnly = this.challenges.filter(c => !c.firestoreId || !fsIds.has(c.firestoreId));
+                        this.challenges = [...allDocs, ...localOnly];
+                        this.challenges.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+                        this.persist();
+                    } catch(e) {
+                        console.warn('Challenge load error:', e);
+                    }
+                },
+
+                // Compute scores for both participants in a challenge, push to Firestore
+                async syncChallengeScores() {
+                    if (!window._fb || !this.firebaseUser) return;
+                    const { db, doc, setDoc } = window._fb;
+                    const myEmail = this.firebaseUser.email.toLowerCase();
+
+                    for (const ch of this.challenges) {
+                        if (!ch.firestoreId) continue;
+                        const start = ch.startDate, end = ch.endDate;
+                        let myScore = 0;
+                        if (ch.metric === 'workouts') myScore = this.workouts.filter(w => w.date >= start && w.date <= end).length;
+                        else if (ch.metric === 'diet') myScore = this.dietLogs.filter(d => d.date >= start && d.date <= end).length;
+                        else if (ch.metric === 'metrics') myScore = this.metricsLogs.filter(m => m.date >= start && m.date <= end).length;
+
+                        const scoreField = ch.role === 'sender' ? 'senderScore' : 'receiverScore';
+                        try {
+                            await setDoc(doc(db, 'challenges', ch.firestoreId), { [scoreField]: myScore }, { merge: true });
+                            // Update local copy
+                            ch[scoreField] = myScore;
+                        } catch(e) { console.warn('Score sync error:', e); }
+                    }
+                    this.persist();
                 },
 
                 deleteChallenge(id) {
@@ -2161,10 +2273,49 @@
 
                 getChallengeProgress(ch) {
                     const start = ch.startDate, end = ch.endDate;
-                    if (ch.metric === 'workouts') return this.workouts.filter(w => w.date >= start && w.date <= end).length;
-                    if (ch.metric === 'diet') return this.dietLogs.filter(d => d.date >= start && d.date <= end).length;
-                    if (ch.metric === 'metrics') return this.metricsLogs.filter(m => m.date >= start && m.date <= end).length;
-                    return 0;
+                    let myScore = 0;
+                    if (ch.metric === 'workouts') myScore = this.workouts.filter(w => w.date >= start && w.date <= end).length;
+                    else if (ch.metric === 'diet') myScore = this.dietLogs.filter(d => d.date >= start && d.date <= end).length;
+                    else if (ch.metric === 'metrics') myScore = this.metricsLogs.filter(m => m.date >= start && m.date <= end).length;
+                    return myScore;
+                },
+
+                getChallengeOpponentScore(ch) {
+                    if (ch.role === 'sender') return ch.receiverScore || 0;
+                    return ch.senderScore || 0;
+                },
+
+                startChallengeListener() {
+                    if (!window._fb || !this.firebaseUser) return;
+                    if (this._challengeUnsub) this._challengeUnsub(); // cleanup previous
+                    const { db, collection, query, where, onSnapshot } = window._fb;
+                    const myEmail = this.firebaseUser.email.toLowerCase();
+                    // Listen to challenges where I am receiver (incoming challenges)
+                    const recvQ = query(collection(db, 'challenges'), where('receiverEmail', '==', myEmail));
+                    this._challengeUnsub = onSnapshot(recvQ, snap => {
+                        snap.docChanges().forEach(change => {
+                            const data = { firestoreId: change.doc.id, ...change.doc.data(), role: 'receiver' };
+                            const idx = this.challenges.findIndex(c => c.firestoreId === data.firestoreId);
+                            if (change.type === 'removed') {
+                                if (idx > -1) this.challenges.splice(idx, 1);
+                            } else {
+                                if (idx > -1) { this.challenges[idx] = data; }
+                                else { this.challenges.unshift(data); }
+                            }
+                        });
+                        this.challenges.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+                        this.persist();
+                    }, err => console.warn('Challenge listener error:', err));
+                },
+
+                getChallengeMyLabel(ch) {
+                    const myEmail = this.firebaseUser ? this.firebaseUser.email : 'You';
+                    return ch.role === 'sender' ? (ch.senderName || myEmail) : myEmail;
+                },
+
+                getChallengeOpponentLabel(ch) {
+                    if (ch.role === 'sender') return ch.receiverEmail || 'Friend';
+                    return ch.senderName || ch.senderEmail || 'Challenger';
                 },
 
                 // ──── EXPORT TO DOC (HTML→Word) ────
