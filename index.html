@@ -130,31 +130,17 @@
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!--
-    ════════════════════════════════════════════════════════
-     FIREBASE SETUP  (SAFE — no secrets in committed code)
-    ════════════════════════════════════════════════════════
-     1. Create a file called  firebase-config.js  in the
-        SAME folder as this HTML file.
-     2. Paste this into firebase-config.js (fill your values):
-
-        window.__VYTARA_CONFIG = {
-            apiKey:            "YOUR_API_KEY",
-            authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId:         "YOUR_PROJECT_ID",
-            storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId:             "YOUR_APP_ID"
-        };
-
-     3. Add  firebase-config.js  to your  .gitignore  file
-        so it is NEVER committed.  GitHub will then show 0 secrets.
-
-     If firebase-config.js is missing, the app works in
-     offline / local-only mode automatically — no crash.
-    ════════════════════════════════════════════════════════
-    -->
-    <script src="firebase-config.js" onerror="console.warn('firebase-config.js not found — running in offline mode.')"></script>
+   <script>
+    window.__VYTARA_CONFIG = {
+      apiKey: "AIzaSyAeHZRyQcAXAIKD2bW72IF_mEIIdCfH0dI",
+      authDomain: "gym-tracker-ec342.firebaseapp.com",
+      projectId: "gym-tracker-ec342",
+      storageBucket: "gym-tracker-ec342.firebasestorage.app",
+      messagingSenderId: "799478199566",
+      appId: "1:799478199566:web:1ae71f357400d9795c135f",
+      measurementId: "G-YEWVD5LZZV"
+    };
+    </script>
     <script type="module">
         const cfg = window.__VYTARA_CONFIG;
         if (!cfg || !cfg.apiKey || cfg.apiKey === 'YOUR_API_KEY') {
