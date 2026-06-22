@@ -341,7 +341,7 @@
         <nav class="space-y-0.5 flex-1">
             <template x-for="tab in sidebarTabs" :key="tab.id">
                 <button @click="switchTab(tab.id);mobileMenuOpen=false" :class="activeTab===tab.id?'bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-white font-bold':'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30'" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl text-xs uppercase tracking-wider transition-all">
-                    <span x-text="tab.icon" class="text-base"></span>
+                    <span class="shrink-0 w-5 h-5 flex items-center justify-center" x-html="getNavIcon(tab.icon,activeTab===tab.id)"></span>
                     <span x-text="tab.label" class="flex-1"></span>
                     <span x-show="tab.id==='challenges'&&challenges.length>0" class="text-[9px] bg-brand-500 text-white rounded-full px-1.5 py-0.5 font-black" x-text="challenges.length"></span>
                 </button>
@@ -1760,6 +1760,14 @@
                 <li>• <strong class="text-slate-800 dark:text-white">Continue Offline</strong> — You can use the app without an account. Data stays on this device only</li>
                 <li>• <strong class="text-slate-800 dark:text-white">🏃 Google Fit</strong> — In Settings → Google Fit, click "Sign in with Google" to sync steps, calories burned and active minutes from your Google account's Fit data</li>
                 <li>• <strong class="text-slate-800 dark:text-white">Why Google Sign-In?</strong> — Google Fit data is private to each user. Signing in lets the app read only YOUR Fit data with your permission — just like any fitness app</li>
+                <li>• <strong class="text-slate-800 dark:text-white">Google Fit Setup (developer — free):</strong> 
+                    1. Go to <a href="https://console.cloud.google.com" target="_blank" class="text-brand-400 underline">console.cloud.google.com</a> → Create project → 
+                    2. APIs &amp; Services → Enable APIs → search "Fitness API" → Enable → 
+                    3. OAuth consent screen → External → Add your domain → 
+                    4. Credentials → Create → OAuth 2.0 Client ID → Web Application → Add your GitHub Pages URL as Authorized JavaScript Origin → 
+                    5. Copy Client ID → paste into GFIT_CLIENT_ID constant in the code → Deploy. 
+                    <em class="text-slate-500">All free — no billing required for Fitness API access.</em>
+                </li>
             </ul>
         </div>
 
@@ -1832,6 +1840,21 @@
                     class="w-full bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md disabled:opacity-40">
                 Send Feedback
             </button>
+        </div>
+    </div>
+
+    <!-- Made with love -->
+    <div class="max-w-xl mt-2 px-2">
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-brand-500/10 to-purple-500/5 border border-brand-500/15">
+            <div class="w-10 h-10 rounded-xl bg-brand-500/15 flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 17s-7-4.5-7-9a4 4 0 018-1.5A4 4 0 1117 8c0 4.5-7 9-7 9z" stroke="#3b82f6" stroke-width="1.75" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-black text-slate-700 dark:text-slate-200">Made with ❤️ by <span class="text-brand-400">Revanth Reddy Abbati</span></p>
+                <p class="text-[10px] text-slate-400 font-medium mt-0.5">VYTARA Premium Fitness OS &nbsp;·&nbsp; © 2026 All rights reserved</p>
+            </div>
         </div>
     </div>
 </div>
@@ -2493,7 +2516,7 @@ const GEMINI_API_KEY = 'AQ.Ab8RN6L_LK0bXau5FIJfGmarqubmCy_AeFMvknbpi-e7h5HqCg';
 // All users sign in with their OWN Google accounts using this single client ID.
 // Register at: https://console.cloud.google.com → APIs & Services → Credentials
 // → Create OAuth 2.0 Client ID → Web Application → add your domain as authorized origin
-const GFIT_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GFIT_CLIENT_ID = '450165299960-8qtst2aje6p4fgjo86i6j3kfma9n6ek0.apps.googleusercontent.com';
 // ══════════════════════════════════════════════════════════════
 const LEGACY_KEYS = ['vytara_v8_vault','vytara_v7_vault'];
 
@@ -3616,17 +3639,17 @@ function vytaraApp() {
         },
         get sidebarTabs() {
             return [
-                {id:'dashboard',label:'Dashboard',icon:'📊'},
-                {id:'workouts',label:'Workouts',icon:'💪'},
-                {id:'diet',label:'Nutrition',icon:'🥗'},
-                {id:'metrics',label:'Body Metrics',icon:'📏'},
-                {id:'goals',label:'Goals',icon:'🎯'},
-                {id:'photos',label:'Progress Photos',icon:'📸'},
-                {id:'reports',label:'Reports & Export',icon:'📋'},
-                {id:'challenges',label:'Challenges',icon:'⚡'},
-                {id:'settings',label:'Settings',icon:'⚙️'},
-                {id:'guide',label:'How to Use',icon:'📖'},
-                {id:'feedback',label:'Feedback',icon:'💬'},
+                {id:'dashboard',label:'Dashboard',icon:'dashboard'},
+                {id:'workouts',label:'Workouts',icon:'workouts'},
+                {id:'diet',label:'Nutrition',icon:'nutrition'},
+                {id:'metrics',label:'Body Metrics',icon:'metrics'},
+                {id:'goals',label:'Goals',icon:'goals'},
+                {id:'photos',label:'Progress Photos',icon:'photos'},
+                {id:'reports',label:'Reports & Export',icon:'reports'},
+                {id:'challenges',label:'Challenges',icon:'challenges'},
+                {id:'settings',label:'Settings',icon:'settings'},
+                {id:'guide',label:'How to Use',icon:'guide'},
+                {id:'feedback',label:'Feedback',icon:'feedback'},
             ];
         },
         get computedMetrics() { return this.getDashboardMetrics(); },
@@ -3828,6 +3851,25 @@ function vytaraApp() {
             const d90 = new Date(); d90.setDate(d90.getDate()-90);
             this.reportRange.from = d90.toISOString().split('T')[0];
             this.reportRange.to = today;
+        },
+
+        getNavIcon(id, active) {
+            const c = active ? '#3b82f6' : (this.theme==='dark' ? '#64748b' : '#94a3b8');
+            const s = `stroke="${c}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+            const icons = {
+                dashboard: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect x="2" y="2" width="7" height="7" rx="1.5" ${s}/><rect x="11" y="2" width="7" height="7" rx="1.5" ${s}/><rect x="2" y="11" width="7" height="7" rx="1.5" ${s}/><rect x="11" y="11" width="7" height="7" rx="1.5" ${s}/></svg>`,
+                workouts: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><line x1="1" y1="10" x2="4" y2="10" ${s}/><rect x="4" y="7" width="2.5" height="6" rx="1.2" ${s}/><line x1="6.5" y1="10" x2="13.5" y2="10" ${s}/><rect x="13.5" y="7" width="2.5" height="6" rx="1.2" ${s}/><line x1="16" y1="10" x2="19" y2="10" ${s}/></svg>`,
+                nutrition: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M10 2C6.5 2 3.5 5 3.5 8.5c0 2.5 1.3 4.6 3.2 5.8L7.5 18h5l.8-3.7C15.2 13.1 16.5 11 16.5 8.5 16.5 5 13.5 2 10 2z" ${s}/><line x1="10" y1="2" x2="10" y2="8" ${s}/><line x1="7" y1="5" x2="13" y2="5" ${s}/></svg>`,
+                metrics: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><polyline points="2,14 6,9 9,12 13,6 18,10" ${s}/><circle cx="18" cy="10" r="1.5" fill="${c}" stroke="none"/><circle cx="2" cy="14" r="1.5" fill="${c}" stroke="none"/></svg>`,
+                goals: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="8" ${s}/><circle cx="10" cy="10" r="5" ${s}/><circle cx="10" cy="10" r="2" ${s}/></svg>`,
+                photos: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect x="2" y="5" width="16" height="12" rx="2" ${s}/><circle cx="10" cy="11" r="3" ${s}/><path d="M7 5V4a1 1 0 011-1h4a1 1 0 011 1v1" ${s}/></svg>`,
+                reports: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect x="3" y="2" width="14" height="16" rx="2" ${s}/><line x1="7" y1="7" x2="13" y2="7" ${s}/><line x1="7" y1="10" x2="13" y2="10" ${s}/><line x1="7" y1="13" x2="10" y2="13" ${s}/></svg>`,
+                challenges: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><polygon points="11,2 4,11 10,11 9,18 16,9 10,9" ${s}/></svg>`,
+                settings: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="3" ${s}/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4" ${s}/></svg>`,
+                guide: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M4 2h9l3 3v13a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" ${s}/><polyline points="13,2 13,5 16,5" ${s}/><line x1="7" y1="8" x2="13" y2="8" ${s}/><line x1="7" y1="11" x2="13" y2="11" ${s}/><line x1="7" y1="14" x2="10" y2="14" ${s}/></svg>`,
+                feedback: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M18 4H2a1 1 0 00-1 1v9a1 1 0 001 1h3l2 3 2-3h9a1 1 0 001-1V5a1 1 0 00-1-1z" ${s}/><line x1="6" y1="9" x2="14" y2="9" ${s}/><line x1="6" y1="12" x2="10" y2="12" ${s}/></svg>`,
+            };
+            return icons[id] || icons['guide'];
         },
 
         getToday() {
@@ -5115,70 +5157,89 @@ function vytaraApp() {
             }
             this.aiNutritionLoading = true;
             const qty    = amount > 0 ? `${amount} ${unit}` : '100g';
-            const prompt = `Return ONLY a raw JSON object (no markdown) for: ${qty} of "${food}". Format: {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}`;
-            const bodyStr = JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.1, maxOutputTokens: 150 }
-            });
-            // Model list — user-specified first, then fallbacks
-            const MODELS = [
-                'gemini-3.1-flash-lite',
-                'gemini-3.0-flash-lite',
-                'gemini-2.5-flash-lite',
-                'gemini-2.0-flash-lite',
-                'gemini-2.0-flash',
-                'gemini-1.5-flash',
-                'gemini-1.5-flash-8b',
-                'gemini-pro',
-            ];
-            // AQ.Ab format = new Google AI Studio key format (still uses ?key= param)
-            // but we try both param and header for maximum compatibility
-            const makeVariants = (model) => {
-                const base = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-                return [
-                    { url: `${base}?key=${GEMINI_API_KEY}`,
-                      headers: { 'Content-Type': 'application/json' } },
-                    { url: base,
-                      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY } },
-                    { url: `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-                      headers: { 'Content-Type': 'application/json' } },
-                ];
-            };
-            let lastErr = 'No models tried';
-            for(const model of MODELS) {
-                for(const v of makeVariants(model)) {
+            const prompt = `Return ONLY a raw JSON object (no markdown, no explanation) with nutritional values for ${qty} of "${food}": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}`;
+
+            // APPROACH 1: Official Google Generative AI SDK via CDN (works with AQ.Ab keys)
+            try {
+                const { GoogleGenerativeAI } = await import('https://esm.sh/@google/generative-ai@0.21.0');
+                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+                const MODELS_SDK = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
+                for(const modelName of MODELS_SDK) {
                     try {
-                        const res = await fetch(v.url, { method: 'POST', headers: v.headers, body: bodyStr });
-                        const data = await res.json();
-                        // 404 = model not found → try next model
-                        if(res.status === 404) { lastErr = `${model}: not found`; break; }
-                        // 400/401/403 = auth / key issue
-                        if(!res.ok) { lastErr = data?.error?.message || `HTTP ${res.status}`; continue; }
-                        if(data.error) { lastErr = data.error.message; continue; }
-                        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                        // Extract JSON from response (handles ```json blocks)
-                        const match = raw.match(/\{[\s\S]*?\}/);
-                        if(!match) { lastErr = 'No JSON in response'; continue; }
+                        const model = genAI.getGenerativeModel({
+                            model: modelName,
+                            generationConfig: { temperature: 0.1, maxOutputTokens: 150 }
+                        });
+                        const result = await model.generateContent(prompt);
+                        const text   = result.response.text();
+                        const match  = text.match(/\{[\s\S]*?\}/);
+                        if(!match) continue;
                         const n = JSON.parse(match[0]);
-                        if((n.calories || n.protein || n.carbs || n.fat) > 0 ||
-                           (n.calories === 0 && n.protein === 0 && n.carbs === 0 && n.fat === 0 && food.toLowerCase().includes('water'))) {
-                            this.mealEntry.calories = Math.round(n.calories  || 0);
-                            this.mealEntry.protein  = Math.round((n.protein  || 0) * 10) / 10;
-                            this.mealEntry.carbs    = Math.round((n.carbs    || 0) * 10) / 10;
-                            this.mealEntry.fat      = Math.round((n.fat      || 0) * 10) / 10;
-                            this.mealEntry.fibre    = Math.round((n.fibre || n.fiber || 0) * 10) / 10;
+                        if((n.calories||n.protein||n.carbs||n.fat) > 0 || food.toLowerCase().includes('water')) {
+                            this.mealEntry.calories = Math.round(n.calories||0);
+                            this.mealEntry.protein  = Math.round((n.protein||0)*10)/10;
+                            this.mealEntry.carbs    = Math.round((n.carbs||0)*10)/10;
+                            this.mealEntry.fat      = Math.round((n.fat||0)*10)/10;
+                            this.mealEntry.fibre    = Math.round((n.fibre||n.fiber||0)*10)/10;
                             this.mealEntryFoodRef   = null;
                             this.aiNutritionLoading = false;
-                            return; // ✅
+                            return;
                         }
-                        lastErr = 'Response has zero values'; continue;
-                    } catch(err) { lastErr = err.message || String(err); continue; }
+                    } catch(modelErr) {
+                        if(modelErr.message && (modelErr.message.includes('not found') || modelErr.message.includes('404'))) continue;
+                        if(modelErr.message && modelErr.message.includes('API_KEY_INVALID')) {
+                            this.aiNutritionLoading = false;
+                            alert('Invalid API key. Please verify your Gemini API key in the code.');
+                            return;
+                        }
+                        continue;
+                    }
+                }
+            } catch(sdkErr) {
+                console.warn('SDK import failed, falling back to REST:', sdkErr.message);
+            }
+
+            // APPROACH 2: Direct REST API (fallback)
+            const bodyStr = JSON.stringify({
+                contents:[{parts:[{text:prompt}]}],
+                generationConfig:{temperature:0.1,maxOutputTokens:150}
+            });
+            const MODELS_REST = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash','gemini-pro'];
+            let lastErr = '';
+            for(const m of MODELS_REST) {
+                const endpoints = [
+                    [`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`, {}],
+                    [`https://generativelanguage.googleapis.com/v1/models/${m}:generateContent?key=${GEMINI_API_KEY}`, {}],
+                    [`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {'x-goog-api-key':GEMINI_API_KEY}],
+                ];
+                for(const [url, extraHeaders] of endpoints) {
+                    try {
+                        const res  = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json',...extraHeaders}, body:bodyStr});
+                        const data = await res.json();
+                        if(res.status===404){ lastErr=m+': not found'; break; }
+                        if(!res.ok||data.error){ lastErr=data?.error?.message||'HTTP '+res.status; continue; }
+                        const raw   = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+                        const match = raw.match(/\{[\s\S]*?\}/);
+                        if(!match){ lastErr='No JSON'; continue; }
+                        const n = JSON.parse(match[0]);
+                        if((n.calories||n.protein||n.carbs||n.fat)>0){
+                            this.mealEntry.calories=Math.round(n.calories||0);
+                            this.mealEntry.protein =Math.round((n.protein||0)*10)/10;
+                            this.mealEntry.carbs   =Math.round((n.carbs||0)*10)/10;
+                            this.mealEntry.fat     =Math.round((n.fat||0)*10)/10;
+                            this.mealEntry.fibre   =Math.round((n.fibre||n.fiber||0)*10)/10;
+                            this.mealEntryFoodRef  =null;
+                            this.aiNutritionLoading=false;
+                            return;
+                        }
+                    } catch(e){ lastErr=e.message; continue; }
                 }
             }
-            console.warn('AI lookup exhausted all options. Last error:', lastErr);
-            alert('AI lookup failed — all models returned errors. Please enter macros manually.');
+            console.warn('AI lookup failed. Last error:', lastErr);
+            alert('AI lookup failed. Please enter macros manually.');
             this.aiNutritionLoading = false;
         },
+
 
 
         // ==================== BADGE & RANKING SYSTEM ====================
@@ -5225,7 +5286,7 @@ function vytaraApp() {
                 B('first_workout','🏋️','First Rep','Log your very first workout',wCount>=1,wCount,1,'bronze'),
                 B('w5','💪','Getting Strong','Complete 5 workouts',wCount>=5,wCount,5,'bronze'),
                 B('w10','⚡','10 Strong','Log 10 workouts',wCount>=10,wCount,10,'silver'),
-                B('w25','🔰','Consistency King','Complete 25 workouts',wCount>=25,wCount,25,'silver'),
+                B('w25','🎖️','25-Session Athlete','Complete 25 workouts',wCount>=25,wCount,25,'silver'),
                 B('w50','🌟','Iron Will','Hit 50 workouts',wCount>=50,wCount,50,'gold'),
                 B('w100','👑','Century Club','Achieve 100 workouts',wCount>=100,wCount,100,'gold'),
                 B('w250','💎','Elite Lifter','Log 250 workouts',wCount>=250,wCount,250,'platinum'),
