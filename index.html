@@ -1802,10 +1802,40 @@
 
 <!-- ═══ FEEDBACK TAB ═══ -->
 <div x-show="activeTab==='feedback'" class="space-y-6 p-4 md:p-8 lg:p-10">
-    <div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">💬 Feedback</h2>
-        <p class="text-xs text-slate-400 font-medium mt-1.5">Share your thoughts, report bugs, or suggest features.</p>
+    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">💬 Feedback</h2>
+
+    <!-- Hello from Developer card -->
+    <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-[1.5rem] p-6 shadow-sm space-y-3">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">👋</span>
+            <h3 class="text-lg font-black text-brand-400">Hello from the Developer</h3>
+        </div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+            VYTARA was built with passion to help you achieve your fitness goals. Your feedback directly shapes future updates — every message is read personally.
+        </p>
+        <p class="text-sm font-black text-slate-500 dark:text-slate-400">— Revanth Reddy Abbati</p>
     </div>
+
+    <!-- Ways to reach us -->
+    <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-[1.5rem] p-6 shadow-sm space-y-4">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ways to Reach Us</p>
+        <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span class="text-xl">📧</span>
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">revanth.abbati@gmail.com</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span class="text-xl">💡</span>
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Feature requests &amp; bug reports welcome</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                <span class="text-xl">⭐</span>
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Rate your experience using the form below</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Form -->
     <div class="bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 p-6 rounded-[1.5rem] shadow-sm space-y-5 max-w-xl">
         <div x-show="feedbackSent" class="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center space-y-2">
             <p class="text-2xl">✅</p>
@@ -1813,73 +1843,29 @@
             <button @click="feedbackSent=false;feedbackForm={name:'',email:'',message:'',rating:5}" class="text-xs text-slate-400 underline mt-1">Send another</button>
         </div>
         <div x-show="!feedbackSent" class="space-y-4">
-            <!-- Star Rating -->
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Rating</label>
                 <div class="flex gap-2">
                     <template x-for="star in [1,2,3,4,5]" :key="star">
-                        <button @click="feedbackForm.rating=star"
-                                class="text-2xl transition-transform hover:scale-125"
-                                :class="star<=feedbackForm.rating?'text-amber-400':'text-slate-300 dark:text-slate-600'">★</button>
+                        <button @click="feedbackForm.rating=star" class="text-2xl transition-transform hover:scale-125" :class="star<=feedbackForm.rating?'text-amber-400':'text-slate-300 dark:text-slate-600'">★</button>
                     </template>
                 </div>
             </div>
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Your Name</label>
-                <input type="text" x-model="feedbackForm.name" placeholder="Your name">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Email (optional)</label>
-                <input type="email" x-model="feedbackForm.email" placeholder="you@example.com">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Message</label>
-                <textarea x-model="feedbackForm.message" rows="4" placeholder="Share what you love, what bugs you, or what you'd like to see added…"></textarea>
-            </div>
-            <button @click="sendFeedback()" :disabled="!feedbackForm.message.trim()"
-                    class="w-full bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md disabled:opacity-40">
-                Send Feedback
-            </button>
+            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Your Name</label><input type="text" x-model="feedbackForm.name" placeholder="Your name"></div>
+            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Email (optional)</label><input type="email" x-model="feedbackForm.email" placeholder="you@example.com"></div>
+            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Message</label><textarea x-model="feedbackForm.message" rows="4" placeholder="Share what you love, what bugs you, or what you'd like to see added…"></textarea></div>
+            <button @click="sendFeedback()" :disabled="!feedbackForm.message.trim()" class="w-full bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md disabled:opacity-40">Send Feedback</button>
         </div>
     </div>
 
-    <!-- Made with love -->
-    <div class="max-w-xl mt-2 px-2">
-        <div class="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-brand-500/10 to-purple-500/5 border border-brand-500/15">
-            <div class="w-10 h-10 rounded-xl bg-brand-500/15 flex items-center justify-center shrink-0">
-                <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 17s-7-4.5-7-9a4 4 0 018-1.5A4 4 0 1117 8c0 4.5-7 9-7 9z" stroke="#3b82f6" stroke-width="1.75" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <p class="text-xs font-black text-slate-700 dark:text-slate-200">Made with ❤️ by <span class="text-brand-400">Revanth Reddy Abbati</span></p>
-                <p class="text-[10px] text-slate-400 font-medium mt-0.5">VYTARA Premium Fitness OS &nbsp;·&nbsp; © 2026 All rights reserved</p>
-            </div>
-        </div>
+    <!-- Built with love footer -->
+    <div class="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-[1.5rem] p-5 text-center space-y-1">
+        <p class="text-sm font-black text-slate-200">VYTARA is continuously evolving.</p>
+        <p class="text-sm text-slate-400 font-medium">Built with <span class="text-red-400">❤️</span> by <span class="font-black text-slate-200">Revanth Reddy Abbati</span> · © 2026 VYTARA</p>
     </div>
 </div>
 
 
-
-    </main><!-- end main content -->
-
-    <!-- ── Fixed Footer ── -->
-    <footer class="no-print shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-panelDark/95 backdrop-blur-sm px-5 py-3">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-1 max-w-7xl mx-auto">
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-black italic tracking-tighter text-brand-500">VYTARA</span>
-                <span class="hidden sm:inline text-[10px] font-bold text-slate-400 uppercase tracking-widest">Premium Fitness OS</span>
-                <span x-show="firebaseUser" class="text-[10px] font-bold text-emerald-400">☁ Synced</span>
-                <span x-show="!firebaseUser" class="text-[10px] font-bold text-amber-400">📱 Local</span>
-            </div>
-            <div class="text-[10px] font-semibold text-slate-500 text-center">
-                Designed &amp; Developed by <span class="font-black text-slate-400">Revanth Reddy Abbati</span>
-            </div>
-            <div class="text-[10px] font-bold text-slate-500">
-                <span>© 2026 VYTARA · All rights reserved</span>
-            </div>
-        </div>
-    </footer>
 
 </div><!-- end right column -->
 </div><!-- end app shell -->
@@ -5157,71 +5143,72 @@ function vytaraApp() {
             }
             this.aiNutritionLoading = true;
             const qty    = amount > 0 ? `${amount} ${unit}` : '100g';
-            const prompt = `Return ONLY a raw JSON object (no markdown, no explanation) with nutritional values for ${qty} of "${food}": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}`;
+            const prompt = `Return ONLY a raw JSON object (no markdown, no explanation) for ${qty} of "${food}": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}`;
 
-            // APPROACH 1: Official Google Generative AI SDK via CDN (works with AQ.Ab keys)
-            try {
-                const { GoogleGenerativeAI } = await import('https://esm.sh/@google/generative-ai@0.21.0');
-                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                const MODELS_SDK = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
-                for(const modelName of MODELS_SDK) {
-                    try {
-                        const model = genAI.getGenerativeModel({
-                            model: modelName,
-                            generationConfig: { temperature: 0.1, maxOutputTokens: 150 }
-                        });
-                        const result = await model.generateContent(prompt);
-                        const text   = result.response.text();
-                        const match  = text.match(/\{[\s\S]*?\}/);
-                        if(!match) continue;
-                        const n = JSON.parse(match[0]);
-                        if((n.calories||n.protein||n.carbs||n.fat) > 0 || food.toLowerCase().includes('water')) {
-                            this.mealEntry.calories = Math.round(n.calories||0);
-                            this.mealEntry.protein  = Math.round((n.protein||0)*10)/10;
-                            this.mealEntry.carbs    = Math.round((n.carbs||0)*10)/10;
-                            this.mealEntry.fat      = Math.round((n.fat||0)*10)/10;
-                            this.mealEntry.fibre    = Math.round((n.fibre||n.fiber||0)*10)/10;
-                            this.mealEntryFoodRef   = null;
-                            this.aiNutritionLoading = false;
-                            return;
-                        }
-                    } catch(modelErr) {
-                        if(modelErr.message && (modelErr.message.includes('not found') || modelErr.message.includes('404'))) continue;
-                        if(modelErr.message && modelErr.message.includes('API_KEY_INVALID')) {
-                            this.aiNutritionLoading = false;
-                            alert('Invalid API key. Please verify your Gemini API key in the code.');
-                            return;
-                        }
-                        continue;
+            // AQ.Ab keys = new Google AI Auth Keys — need Bearer token OR SDK
+            // AIza keys  = old Standard keys — use ?key= URL param
+            const isNewKey = GEMINI_API_KEY.startsWith('AQ.');
+
+            // ── Approach 1: Official SDK via CDN (best for AQ.Ab keys) ──
+            const CDNS = [
+                'https://esm.sh/@google/generative-ai',
+                'https://esm.sh/@google/generative-ai@latest',
+                'https://cdn.skypack.dev/@google/generative-ai',
+            ];
+            for(const cdn of CDNS) {
+                try {
+                    const { GoogleGenerativeAI } = await import(cdn);
+                    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+                    const MODELS = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
+                    for(const m of MODELS) {
+                        try {
+                            const model  = genAI.getGenerativeModel({model:m, generationConfig:{temperature:0.1,maxOutputTokens:150}});
+                            const result = await model.generateContent(prompt);
+                            const text   = result.response.text();
+                            const match  = text.match(/\{[\s\S]*?\}/);
+                            if(!match) continue;
+                            const n = JSON.parse(match[0]);
+                            if((n.calories||n.protein||n.carbs||n.fat) > 0) {
+                                this.mealEntry.calories=Math.round(n.calories||0);
+                                this.mealEntry.protein =Math.round((n.protein||0)*10)/10;
+                                this.mealEntry.carbs   =Math.round((n.carbs||0)*10)/10;
+                                this.mealEntry.fat     =Math.round((n.fat||0)*10)/10;
+                                this.mealEntry.fibre   =Math.round((n.fibre||n.fiber||0)*10)/10;
+                                this.mealEntryFoodRef  =null;
+                                this.aiNutritionLoading=false;
+                                return; // ✅ SDK success
+                            }
+                        } catch(me){ if(me.message&&me.message.includes('API_KEY_INVALID')){this.aiNutritionLoading=false;alert('Invalid API key.');return;} continue; }
                     }
-                }
-            } catch(sdkErr) {
-                console.warn('SDK import failed, falling back to REST:', sdkErr.message);
+                    break; // SDK loaded — model loop exhausted, stop CDN loop
+                } catch(sdkErr){ continue; } // CDN failed, try next
             }
 
-            // APPROACH 2: Direct REST API (fallback)
-            const bodyStr = JSON.stringify({
-                contents:[{parts:[{text:prompt}]}],
-                generationConfig:{temperature:0.1,maxOutputTokens:150}
-            });
-            const MODELS_REST = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash','gemini-pro'];
-            let lastErr = '';
-            for(const m of MODELS_REST) {
-                const endpoints = [
-                    [`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`, {}],
-                    [`https://generativelanguage.googleapis.com/v1/models/${m}:generateContent?key=${GEMINI_API_KEY}`, {}],
-                    [`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {'x-goog-api-key':GEMINI_API_KEY}],
+            // ── Approach 2: REST API with correct auth for key format ──
+            const body   = JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:150}});
+            const MODELS = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash','gemini-pro'];
+            const BASE   = 'https://generativelanguage.googleapis.com';
+            let lastErr  = '';
+            for(const m of MODELS) {
+                // For AQ.Ab keys: use Bearer token. For AIza keys: use ?key= param.
+                const endpoints = isNewKey ? [
+                    [`${BASE}/v1beta/models/${m}:generateContent`, {'Authorization':`Bearer ${GEMINI_API_KEY}`,'Content-Type':'application/json'}],
+                    [`${BASE}/v1/models/${m}:generateContent`,     {'Authorization':`Bearer ${GEMINI_API_KEY}`,'Content-Type':'application/json'}],
+                    [`${BASE}/v1beta/models/${m}:generateContent`, {'x-goog-api-key':GEMINI_API_KEY,'Content-Type':'application/json'}],
+                ] : [
+                    [`${BASE}/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`, {'Content-Type':'application/json'}],
+                    [`${BASE}/v1/models/${m}:generateContent?key=${GEMINI_API_KEY}`,     {'Content-Type':'application/json'}],
                 ];
-                for(const [url, extraHeaders] of endpoints) {
+                for(const [url, headers] of endpoints) {
                     try {
-                        const res  = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json',...extraHeaders}, body:bodyStr});
+                        const res  = await fetch(url, {method:'POST', headers, body});
                         const data = await res.json();
-                        if(res.status===404){ lastErr=m+': not found'; break; }
+                        if(res.status===404){ lastErr=m+':not found'; break; }
                         if(!res.ok||data.error){ lastErr=data?.error?.message||'HTTP '+res.status; continue; }
-                        const raw   = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-                        const match = raw.match(/\{[\s\S]*?\}/);
-                        if(!match){ lastErr='No JSON'; continue; }
-                        const n = JSON.parse(match[0]);
+                        const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+                        const mtch = raw.match(/\{[\s\S]*?\}/);
+                        if(!mtch){ lastErr='No JSON'; continue; }
+                        const n = JSON.parse(mtch[0]);
                         if((n.calories||n.protein||n.carbs||n.fat)>0){
                             this.mealEntry.calories=Math.round(n.calories||0);
                             this.mealEntry.protein =Math.round((n.protein||0)*10)/10;
@@ -5230,16 +5217,14 @@ function vytaraApp() {
                             this.mealEntry.fibre   =Math.round((n.fibre||n.fiber||0)*10)/10;
                             this.mealEntryFoodRef  =null;
                             this.aiNutritionLoading=false;
-                            return;
+                            return; // ✅ REST success
                         }
                     } catch(e){ lastErr=e.message; continue; }
                 }
             }
-            console.warn('AI lookup failed. Last error:', lastErr);
-            alert('AI lookup failed. Please enter macros manually.');
             this.aiNutritionLoading = false;
+            alert('AI lookup failed. The API key may not have access to the Generative Language API. Please verify your key at https://aistudio.google.com');
         },
-
 
 
         // ==================== BADGE & RANKING SYSTEM ====================
@@ -5331,6 +5316,92 @@ function vytaraApp() {
             if(earned<=17)  return {rank:'Champion',icon:'🏅', color:'text-yellow-400', pts:earned};
             if(earned<=22)  return {rank:'Elite',   icon:'💎', color:'text-brand-400',  pts:earned};
             return              {rank:'Legend',  icon:'🏆', color:'text-purple-400', pts:earned};
+        },
+
+        // ==================== GOOGLE FIT ====================
+        connectGoogleFit() {
+            if(!GFIT_CLIENT_ID || GFIT_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID')) {
+                alert('Google Fit sync is not yet configured for this app. Check Settings for more info.');
+                return;
+            }
+            const SCOPE = encodeURIComponent([
+                'https://www.googleapis.com/auth/fitness.activity.read',
+                'https://www.googleapis.com/auth/fitness.body.read'
+            ].join(' '));
+            const redirectUri = window.location.origin + window.location.pathname;
+            const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
+                + '?client_id=' + GFIT_CLIENT_ID
+                + '&redirect_uri=' + encodeURIComponent(redirectUri)
+                + '&response_type=token'
+                + '&scope=' + SCOPE
+                + '&prompt=select_account';
+            const popup = window.open(authUrl, 'googlefit_auth', 'width=520,height=640,menubar=no,toolbar=no,location=yes');
+            if(!popup) { alert('Popups are blocked. Please allow popups and try again.'); return; }
+            const poll = setInterval(() => {
+                try {
+                    if(!popup || popup.closed) { clearInterval(poll); return; }
+                    const hash = popup.location.hash;
+                    if(hash && hash.includes('access_token')) {
+                        clearInterval(poll); popup.close();
+                        const params = new URLSearchParams(hash.slice(1));
+                        const token  = params.get('access_token');
+                        if(token) {
+                            this.googleFitAccessToken = token;
+                            this.googleFitConnected   = true;
+                            this.persist();
+                            this.syncGoogleFitData();
+                        }
+                    }
+                } catch(e) { /* cross-origin polling */ }
+            }, 700);
+        },
+
+        disconnectGoogleFit() {
+            this.googleFitAccessToken = null;
+            this.googleFitConnected   = false;
+            this.googleFitData        = { stepsToday:0, calsBurned:0, activeMins:0 };
+            this.persist();
+        },
+
+        async syncGoogleFitData() {
+            if(!this.googleFitAccessToken) return;
+            this.googleFitSyncing = true;
+            try {
+                const now   = Date.now();
+                const start = new Date(); start.setHours(0,0,0,0);
+                const body  = JSON.stringify({
+                    aggregateBy: [
+                        {dataTypeName:'com.google.step_count.delta'},
+                        {dataTypeName:'com.google.calories.expended'},
+                        {dataTypeName:'com.google.active_minutes'}
+                    ],
+                    bucketByTime: {durationMillis:86400000},
+                    startTimeMillis: start.getTime(),
+                    endTimeMillis:   now
+                });
+                const res = await fetch('https://fitness.googleapis.com/fitness/v1/users/me/dataset:aggregate', {
+                    method:'POST',
+                    headers:{'Authorization':'Bearer '+this.googleFitAccessToken,'Content-Type':'application/json'},
+                    body
+                });
+                if(res.status===401) { this.disconnectGoogleFit(); return; }
+                const data = await res.json();
+                let steps=0, cals=0, mins=0;
+                (data.bucket||[]).forEach(b => {
+                    (b.dataset||[]).forEach(ds => {
+                        const t = ds.dataSourceId||'';
+                        (ds.point||[]).forEach(p => {
+                            const v = p.value?.[0];
+                            if(t.includes('step_count'))  steps += parseInt(v?.intVal||0);
+                            else if(t.includes('calories')) cals  += Math.round(parseFloat(v?.fpVal||0));
+                            else if(t.includes('active_minutes')) mins += parseInt(v?.intVal||0);
+                        });
+                    });
+                });
+                this.googleFitData = {stepsToday:steps, calsBurned:cals, activeMins:mins};
+                this.persist();
+            } catch(e) { console.warn('Google Fit sync error:', e); }
+            this.googleFitSyncing = false;
         },
 
         // ==================== CHALLENGES ====================
