@@ -1660,7 +1660,7 @@
 
             </div>
             <div class="flex items-center gap-2">
-                <button x-show="!googleFitConnected" @click="connectGoogleFit()"
+                <button x-show="!googleFitConnected" @click="appConfigLoaded ? connectGoogleFit() : (alert('Loading, please try again in a moment.'))"
                         class="flex items-center gap-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-400 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-5 rounded-xl text-sm transition-all shadow-sm hover:shadow-md active:scale-95">
                     <svg width="18" height="18" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -2009,6 +2009,81 @@
 </div><!-- end right column -->
 </div><!-- end app shell -->
 
+
+<!-- FOOD EDIT MODAL -->
+<div x-show="openModals.foodEditModal"
+     x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+     @click.self="cancelEditFood()">
+    <div class="bg-white dark:bg-panelDark rounded-[2rem] shadow-2xl w-full max-w-lg p-7 space-y-5"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-black">Edit Food</h2>
+                <p class="text-xs text-slate-400 mt-0.5" x-text="editingFood ? editingFood.name : ''"></p>
+            </div>
+            <button @click="cancelEditFood()" class="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 text-lg transition-colors">✕</button>
+        </div>
+        <div class="space-y-3">
+            <!-- Name + Category -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Food Name *</label>
+                    <input type="text" x-model="editFoodForm.name" placeholder="Food name">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Category</label>
+                    <select x-model="editFoodForm.category">
+                        <option>General</option><option>Grains</option><option>Protein</option><option>Dairy</option>
+                        <option>Vegetables</option><option>Fruits</option><option>Nuts & Seeds</option>
+                        <option>Supplements</option><option>Snacks</option><option>Drinks</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Per Amount</label>
+                    <div class="flex gap-1">
+                        <input type="number" x-model="editFoodForm.per" placeholder="100" class="flex-1">
+                        <select x-model="editFoodForm.unit" class="!w-16">
+                            <option value="g">g</option><option value="ml">ml</option>
+                            <option value="pc">pc</option><option value="cup">cup</option>
+                            <option value="tbsp">tbsp</option><option value="tsp">tsp</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-[9px] font-black text-emerald-400 uppercase block mb-1">Default Serving (auto-fills when selected) ⭐</label>
+                    <input type="number" x-model="editFoodForm.defaultAmount" placeholder="e.g. 250">
+                </div>
+            </div>
+            <!-- Macros -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div><label class="text-[9px] font-black text-purple-400 uppercase block mb-1">Calories *</label>
+                    <input type="number" x-model="editFoodForm.calories" placeholder="kcal"></div>
+                <div><label class="text-[9px] font-black text-brand-400 uppercase block mb-1">Protein (g)</label>
+                    <input type="number" step="any" x-model="editFoodForm.protein" placeholder="g"></div>
+                <div><label class="text-[9px] font-black text-emerald-400 uppercase block mb-1">Carbs (g)</label>
+                    <input type="number" step="any" x-model="editFoodForm.carbs" placeholder="g"></div>
+                <div><label class="text-[9px] font-black text-orange-400 uppercase block mb-1">Fat (g)</label>
+                    <input type="number" step="any" x-model="editFoodForm.fat" placeholder="g"></div>
+            </div>
+        </div>
+        <div class="flex gap-2 pt-1">
+            <button @click="saveEditFood()"
+                    :disabled="!editFoodForm.name||!editFoodForm.calories"
+                    class="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all disabled:opacity-40">
+                ✓ Save Changes
+            </button>
+            <button @click="cancelEditFood()"
+                    class="border border-slate-200 dark:border-slate-700 text-slate-400 font-black py-3 px-5 rounded-xl text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- FORGOT PASSWORD MODAL -->
 <div x-show="forgotPasswordMode"
@@ -4312,6 +4387,8 @@ function vytaraApp() {
         // ==================== PERSIST ====================
         async _onMount() {
             await this.loadAppConfig();
+            // Also refresh config every 30s in case admin updates keys
+            setInterval(async () => { await this.loadAppConfig(); }, 30000);
         },
 
         persist() {
@@ -5501,8 +5578,8 @@ function vytaraApp() {
         // ==================== GOOGLE FIT ====================
         connectGoogleFit() {
             const GFIT_CLIENT_ID = this.appConfig.gfitClientId || localStorage.getItem('vytara_gfit_client') || '';
-            if(!GFIT_CLIENT_ID || !GFIT_CLIENT_ID.includes('apps.googleusercontent.com')) {
-                alert('Google Fit is not configured yet. Please try again later.');
+            if(!GFIT_CLIENT_ID) {
+                alert('Google Fit is not available yet. Please try again in a moment.');
                 return;
             }
             const SCOPE = encodeURIComponent([
