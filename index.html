@@ -1582,11 +1582,12 @@
                     <p class="text-[9px] text-slate-500 mt-0.5">Auto-fills this quantity when selecting food in meal log</p>
                 </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 <div><label class="text-[9px] font-black text-purple-400 uppercase block mb-1">Calories *</label><input type="number" x-model="newFoodEntry.calories" placeholder="kcal"></div>
                 <div><label class="text-[9px] font-black text-brand-400 uppercase block mb-1">Protein (g)</label><input type="number" step="any" x-model="newFoodEntry.protein" placeholder="g"></div>
                 <div><label class="text-[9px] font-black text-emerald-400 uppercase block mb-1">Carbs (g)</label><input type="number" step="any" x-model="newFoodEntry.carbs" placeholder="g"></div>
                 <div><label class="text-[9px] font-black text-orange-400 uppercase block mb-1">Fat (g)</label><input type="number" step="any" x-model="newFoodEntry.fat" placeholder="g"></div>
+                <div><label class="text-[9px] font-black text-lime-400 uppercase block mb-1">Fibre (g)</label><input type="number" step="any" x-model="newFoodEntry.fibre" placeholder="g"></div>
             </div>
             <button @click="addToFoodLibraryFromForm()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black py-2.5 px-5 rounded-xl text-xs uppercase tracking-wider transition-all">+ Add to Library</button>
         </div>
@@ -1601,7 +1602,7 @@
                             <span x-show="food.defaultAmount>0" class="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md shrink-0"
                                   x-text="'Default: '+food.defaultAmount+(food.unit||'g')"></span>
                         </div>
-                        <p class="text-[10px] text-slate-400 font-medium" x-text="food.category+' · '+food.calories+' kcal per '+food.per+(food.unit||'g')+' · P:'+food.protein+'g C:'+food.carbs+'g F:'+food.fat+'g'"></p>
+                        <p class="text-[10px] text-slate-400 font-medium" x-text="food.category+' · '+food.calories+' kcal per '+food.per+(food.unit||'g')+' · P:'+food.protein+'g C:'+food.carbs+'g F:'+food.fat+'g Fi:'+(food.fibre||food.fiber||0)+'g'"></p>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         <button @click="startEditFood(food)" class="text-brand-400 font-black text-xs hover:text-brand-500 bg-brand-500/10 px-2 py-1 rounded-lg transition-colors">✏️</button>
@@ -2060,7 +2061,7 @@
                 </div>
             </div>
             <!-- Macros -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 <div><label class="text-[9px] font-black text-purple-400 uppercase block mb-1">Calories *</label>
                     <input type="number" x-model="editFoodForm.calories" placeholder="kcal"></div>
                 <div><label class="text-[9px] font-black text-brand-400 uppercase block mb-1">Protein (g)</label>
@@ -2069,6 +2070,8 @@
                     <input type="number" step="any" x-model="editFoodForm.carbs" placeholder="g"></div>
                 <div><label class="text-[9px] font-black text-orange-400 uppercase block mb-1">Fat (g)</label>
                     <input type="number" step="any" x-model="editFoodForm.fat" placeholder="g"></div>
+                <div><label class="text-[9px] font-black text-lime-400 uppercase block mb-1">Fibre (g)</label>
+                    <input type="number" step="any" x-model="editFoodForm.fibre" placeholder="g"></div>
             </div>
         </div>
         <div class="flex gap-2 pt-1">
@@ -3794,7 +3797,7 @@ function vytaraApp() {
         challengeForm: { toEmail:'', metric:'workouts', endDate:'' },
         // Food Library (per-100g macro database)
         foodDatabase: [],
-        newFoodEntry: { name:'', category:'General', unit:'g', per:100, calories:'', protein:'', carbs:'', fat:'', fiber:'' },
+        newFoodEntry: { name:'', category:'General', unit:'g', per:100, defaultAmount:'', calories:'', protein:'', carbs:'', fat:'', fiber:'', fibre:'' },
         editingFood: null,
         challengesLoading: false,
         aiNutritionLoading: false,
@@ -3813,7 +3816,7 @@ function vytaraApp() {
         changePasswordForm: { current:'', newPwd:'', confirm:'' },
         changePasswordMsg: '',
         _challengeUnsubs: [],
-        editFoodForm: {name:'',category:'General',unit:'g',per:100,defaultAmount:'',calories:'',protein:'',carbs:'',fat:'',fiber:''},
+        editFoodForm: {name:'',category:'General',unit:'g',per:100,defaultAmount:'',calories:'',protein:'',carbs:'',fat:'',fiber:'',fibre:''},
         mealEntryAmount: '', // quantity field for food-library selected items
         mealEntryFoodRef: null, // the selected food from library
         mealItemEditIdx: -1, // -1=adding new, >=0=editing existing item at that index
@@ -4192,6 +4195,10 @@ function vytaraApp() {
                     ref, uploadString, getDownloadURL, deleteObject
                 };
 
+                // Set LOCAL persistence so login survives page refreshes
+                const { browserLocalPersistence, setPersistence } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+                await setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence:', e));
+
                 // Auth state listener — handles persistent sign-in / sign-out
                 onAuthStateChanged(auth, (user) => {
                     window._fbUser = user || null;
@@ -4213,28 +4220,33 @@ function vytaraApp() {
 
         // ==================== AUTH ====================
         async loadAppConfig() {
-            // Try Firebase first, then localStorage fallback
+            // Load from Firebase FIRST (Firebase values take priority over localStorage)
+            // Uses window._fb (already initialized) — no separate import to avoid version mismatch
+            let loadedFromFirebase = false;
             try {
                 await this._initFirebase();
-                const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js');
-                const snap = await getDoc(doc(window._fb.db, 'config', 'apiKeys'));
+                // Use the doc/getDoc already imported in _initFirebase (same version = no crash)
+                const snap = await window._fb.getDoc(window._fb.doc(window._fb.db, 'config', 'apiKeys'));
                 if(snap.exists()) {
                     const d = snap.data();
                     if(d.geminiKey)    this.appConfig.geminiKey    = d.geminiKey;
                     if(d.geminiModel)  this.appConfig.geminiModel  = d.geminiModel || 'gemini-3.1-flash-lite';
                     if(d.gfitClientId) this.appConfig.gfitClientId = d.gfitClientId;
+                    loadedFromFirebase = true;
                     console.log('[VYTARA] Config loaded from Firebase ✓');
                 }
             } catch(e) {
-                console.warn('[VYTARA] Firebase config load failed, using localStorage:', e.message);
+                console.warn('[VYTARA] Firebase config load failed:', e.message);
             }
-            // Always merge with localStorage (localStorage overrides Firebase if set)
-            const lsKey    = localStorage.getItem('vytara_gemini_key');
-            const lsModel  = localStorage.getItem('vytara_gemini_model');
-            const lsClient = localStorage.getItem('vytara_gfit_client');
-            if(lsKey)    this.appConfig.geminiKey    = lsKey;
-            if(lsModel)  this.appConfig.geminiModel  = lsModel;
-            if(lsClient) this.appConfig.gfitClientId = lsClient;
+            // Only use localStorage as fallback if Firebase didn't provide the values
+            if(!loadedFromFirebase) {
+                const lsKey    = localStorage.getItem('vytara_gemini_key');
+                const lsModel  = localStorage.getItem('vytara_gemini_model');
+                const lsClient = localStorage.getItem('vytara_gfit_client');
+                if(lsKey)    this.appConfig.geminiKey    = lsKey;
+                if(lsModel)  this.appConfig.geminiModel  = lsModel;
+                if(lsClient) this.appConfig.gfitClientId = lsClient;
+            }
             this.appConfigLoaded = true;
         },
 
@@ -5163,9 +5175,10 @@ function vytaraApp() {
                 protein: parseFloat(f.protein)   || 0,
                 carbs:   parseFloat(f.carbs)     || 0,
                 fat:     parseFloat(f.fat)       || 0,
-                fiber:   parseFloat(f.fiber)     || 0
+                fiber:   parseFloat(f.fiber)     || 0,
+                fibre:   parseFloat(f.fibre||f.fiber) || 0
             });
-            this.newFoodEntry = {name:'',category:'General',unit:'g',per:100,defaultAmount:'',calories:'',protein:'',carbs:'',fat:'',fiber:''};
+            this.newFoodEntry = {name:'',category:'General',unit:'g',per:100,defaultAmount:'',calories:'',protein:'',carbs:'',fat:'',fiber:'',fibre:''};
             this.persist();
         },
         startEditFood(food) {
@@ -5175,7 +5188,8 @@ function vytaraApp() {
                 unit: food.unit||'g', per: food.per||100,
                 defaultAmount: food.defaultAmount||'',
                 calories: food.calories||'', protein: food.protein||'',
-                carbs: food.carbs||'', fat: food.fat||'', fiber: food.fiber||''
+                carbs: food.carbs||'', fat: food.fat||'',
+                fiber: food.fiber||'', fibre: food.fibre||food.fiber||''
             };
             this.openModals.foodEditModal = true;
         },
@@ -5194,8 +5208,9 @@ function vytaraApp() {
                 calories: parseFloat(f.calories) || 0,
                 protein: parseFloat(f.protein) || 0,
                 carbs: parseFloat(f.carbs) || 0,
-                fat: parseFloat(f.fat) || 0,
+                fat:   parseFloat(f.fat)   || 0,
                 fiber: parseFloat(f.fiber) || 0,
+                fibre: parseFloat(f.fibre||f.fiber) || 0,
             };
             this.persist();
             this.editingFood = null;
