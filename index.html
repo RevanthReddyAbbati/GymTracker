@@ -63,7 +63,7 @@
         .pb-safe{padding-bottom:env(safe-area-inset-bottom,12px)}
         /* Mobile touch improvements */
         @media(max-width:640px){
-            .water-btn{padding:.4rem .55rem;font-size:.6rem}
+            .water-btn{padding:.5rem .7rem;font-size:.65rem;font-weight:700;border-radius:.6rem;border:1.5px solid;transition:all .15s;cursor:pointer;} :root .water-btn{background:#f1f5f9;color:#2563eb;border-color:#bfdbfe;} .dark .water-btn{background:rgba(59,130,246,.12);color:#60a5fa;border-color:rgba(59,130,246,.2);} .water-btn:hover{opacity:.85;transform:scale(.97);}
             .autocomplete-dropdown .ac-item{padding:.5rem .8rem;font-size:.75rem}
             input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],select,textarea{padding:.65rem .85rem!important;font-size:.875rem!important}
             /* Prevent zoom on input focus */
@@ -1623,15 +1623,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Current Password</label>
-                <input type="password" x-model="changePasswordForm.current" placeholder="Enter current password" style="display:block;width:100%;background:#1e293b;color:#f1f5f9;border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:13px;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'">
+                <input type="password" x-model="changePasswordForm.current" placeholder="Enter current password" class="block w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm px-4 py-3 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors">
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">New Password</label>
-                <input type="password" x-model="changePasswordForm.newPwd" placeholder="Min 6 characters" style="display:block;width:100%;background:#1e293b;color:#f1f5f9;border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:13px;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'">
+                <input type="password" x-model="changePasswordForm.newPwd" placeholder="Min 6 characters" class="block w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm px-4 py-3 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors">
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Confirm New</label>
-                <input type="password" x-model="changePasswordForm.confirm" placeholder="Repeat new password" style="display:block;width:100%;background:#1e293b;color:#f1f5f9;border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:13px;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'">
+                <input type="password" x-model="changePasswordForm.confirm" placeholder="Repeat new password" class="block w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm px-4 py-3 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors">
             </div>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -1986,6 +1986,27 @@
     </div>
 </div>
 </div><!-- end app shell -->
+
+
+    <!-- ══ App Footer ══ -->
+    <footer x-show="currentView==='app'"
+            class="no-print shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-panelDark/95 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold text-slate-400">
+            <div class="flex items-center gap-2">
+                <span class="font-black text-brand-500 uppercase tracking-wider">VYTARA</span>
+                <span class="hidden sm:inline text-slate-300 dark:text-slate-600">PREMIUM FITNESS OS</span>
+                <span x-show="firebaseUser" class="flex items-center gap-1 text-emerald-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Synced
+                </span>
+            </div>
+            <div class="text-center hidden md:block text-slate-400">
+                Designed &amp; Developed by <strong class="text-slate-500 dark:text-slate-300">Revanth Reddy Abbati</strong>
+            </div>
+            <div class="text-right">
+                © 2026 VYTARA · All rights reserved
+            </div>
+        </div>
+    </footer>
 
 <!-- FORGOT PASSWORD MODAL -->
 <div x-show="forgotPasswordMode"
@@ -2614,7 +2635,7 @@ const VAULT_KEY = 'vytara_v10_vault';
 // Users never see or configure these — they are registered once
 // by the app developer in Google Cloud Console / Google AI Studio
 // ══════════════════════════════════════════════════════════════
-const GEMINI_API_KEY = 'AQ.Ab8RN6L_LK0bXau5FIJfGmarqubmCy_AeFMvknbpi-e7h5HqCg';
+const GEMINI_API_KEY = 'AQ.Ab8RN6KllUBaOUqLfYxYFDKiYRfEoDasE2t08ryCH8Ntd3tyfQ';
 // Google OAuth2 Client ID — registered ONCE by developer for this domain.
 // All users sign in with their OWN Google accounts using this single client ID.
 // Register at: https://console.cloud.google.com → APIs & Services → Credentials
@@ -5256,55 +5277,47 @@ function vytaraApp() {
             const unit   = this.mealEntry._unit || 'g';
             if(!food) { alert('Enter a food name first.'); return; }
             if(!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-                alert('AI nutrition search is not configured.'); return;
+                alert('AI nutrition search requires an API key. Set GEMINI_API_KEY in the code.'); return;
             }
             this.aiNutritionLoading = true;
             const qty    = amount > 0 ? (amount + ' ' + unit) : '100g';
-            const prompt = 'You are a nutrition database. Return ONLY a JSON object with no markdown, no explanation, no extra text. Nutritional values for ' + qty + ' of "' + food + '": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
-            const body = JSON.stringify({
-                contents: [{parts:[{text:prompt}]}],
-                generationConfig:{temperature:0,maxOutputTokens:120}
+            const prompt = 'Return ONLY a JSON object. No markdown, no text before or after. Nutritional values for ' + qty + ' of "' + food + '": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
+            const reqBody = JSON.stringify({
+                contents:[{parts:[{text:prompt}]}],
+                generationConfig:{temperature:0, maxOutputTokens:120}
             });
-            // Models confirmed working with AQ.Ab key format (from Google AI Studio Image)
+            // EXACT same call pattern as the working ticket validator reference app
+            // Priority: models confirmed available in Google AI Studio (Image 1)
             const MODELS = [
-                'gemini-3.1-flash-lite',          // User confirmed this works (Image 1)
-                'gemini-3.5-flash',               // Image 1: 3.5 Flash
-                'gemini-3.1-flash-8b',            // Possible lite variant
-                'gemini-2.5-flash-lite-preview-06-17', // Working reference app model
+                'gemini-2.5-flash-lite-preview-06-17',  // Ticket validator default (confirmed working)
+                'gemini-3.1-flash-lite',                 // Image 1: "3.1 Flash-Lite"
+                'gemini-3.5-flash',                      // Image 1: "3.5 Flash"
                 'gemini-2.5-flash',
                 'gemini-2.0-flash',
                 'gemini-1.5-flash',
             ];
-            const BASES = [
-                'https://generativelanguage.googleapis.com/v1beta/models/',
-                'https://generativelanguage.googleapis.com/v1/models/',
-            ];
-            let succeeded = false;
             for(const model of MODELS) {
-                if(succeeded) break;
-                for(const base of BASES) {
+                try {
+                    // v1beta endpoint + ?key= param — exact pattern from ticket validator line 962
+                    const url  = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + GEMINI_API_KEY;
+                    const resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:reqBody});
+                    if(resp.status === 401 || resp.status === 403) {
+                        // 401 = key rejected. Stop all attempts.
+                        this.aiNutritionLoading = false;
+                        alert('API key rejected (401). The key in the app may be outdated.\nUpdate GEMINI_API_KEY in the code to your current key from https://aistudio.google.com/apikey');
+                        return;
+                    }
+                    if(resp.status === 404) continue; // model not found, try next
+                    if(!resp.ok) continue;
+                    const data = await resp.json();
+                    if(data.error) continue;
+                    var txt = '';
+                    try { txt = data.candidates[0].content.parts[0].text || ''; } catch(pe) { continue; }
+                    // Clean markdown fences exactly like ticket validator line 966
+                    txt = txt.trim().replace(/```json|```/gi, '').trim();
                     try {
-                        const url  = base + model + ':generateContent?key=' + GEMINI_API_KEY;
-                        const resp = await fetch(url, {
-                            method:'POST',
-                            headers:{'Content-Type':'application/json'},
-                            body:body
-                        });
-                        if(resp.status === 404) break; // model not in this endpoint, try next model
-                        if(resp.status === 401 || resp.status === 403) {
-                            this.aiNutritionLoading = false;
-                            alert('AI key error (' + resp.status + '). Your API key does not have access.\nGet a key from https://aistudio.google.com'); return;
-                        }
-                        if(!resp.ok) continue;
-                        const data = await resp.json();
-                        if(data.error) continue;
-                        var txt = '';
-                        try { txt = data.candidates[0].content.parts[0].text || ''; } catch(e) { continue; }
-                        txt = txt.trim().replace(/```json[\s\S]*?```|```[\s\S]*?```/g,'').trim();
-                        var m = txt.match(/\{[^\{\}]+\}/);
-                        if(!m) continue;
-                        var n = JSON.parse(m[0]);
-                        if((n.calories||n.protein||n.carbs||n.fat) > 0) {
+                        var n = JSON.parse(txt);
+                        if((n.calories || n.protein || n.carbs || n.fat) > 0) {
                             this.mealEntry.calories = Math.round(n.calories  || 0);
                             this.mealEntry.protein  = Math.round((n.protein  || 0) * 10) / 10;
                             this.mealEntry.carbs    = Math.round((n.carbs    || 0) * 10) / 10;
@@ -5312,14 +5325,13 @@ function vytaraApp() {
                             this.mealEntry.fibre    = Math.round((n.fibre || n.fiber || 0) * 10) / 10;
                             this.mealEntryFoodRef   = null;
                             this.aiNutritionLoading = false;
-                            succeeded = true;
-                            return;
+                            return; // SUCCESS
                         }
-                    } catch(e) { continue; }
-                }
+                    } catch(pe) { continue; }
+                } catch(e) { continue; }
             }
             this.aiNutritionLoading = false;
-            if(!succeeded) alert('AI lookup failed. Please enter macros manually.');
+            alert('AI lookup failed for all models. Please enter macros manually.');
         },
 
 
