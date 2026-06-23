@@ -1583,15 +1583,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Current Password</label>
-                <input type="password" x-model="changePasswordForm.current" placeholder="Current password">
+                <input type="password" x-model="changePasswordForm.current" placeholder="Enter current password" style="display:block;width:100%;background:#1e293b;color:#f1f5f9;border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:13px;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'">
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">New Password</label>
-                <input type="password" x-model="changePasswordForm.newPwd" placeholder="Min 6 characters">
+                <input type="password" x-model="changePasswordForm.newPwd" placeholder="Min 6 characters" style="display:block;width:100%;background:#1e293b;color:#f1f5f9;border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:13px;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'">
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Confirm New</label>
-                <input type="password" x-model="changePasswordForm.confirm" placeholder="Repeat new password">
+                <input type="password" x-model="changePasswordForm.confirm" placeholder="Repeat new password" style="display:block;width:100%;background:#1e293b;color:#f1f5f9;border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:13px;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'">
             </div>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -1614,9 +1614,18 @@
             <div>
                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-400">🏃 Google Fit</h3>
                 <p class="text-xs text-slate-400 font-medium mt-1">
-                    <span x-show="!googleFitConnected">Sign in with Google to sync steps, calories burned and active minutes from Google Fit</span>
-                    <span x-show="googleFitConnected">Connected — your Google Fit activity data is syncing</span>
+                    <span x-show="!googleFitConnected">Sign in with Google to sync your steps, calories and active minutes</span>
+                    <span x-show="googleFitConnected">✓ Connected — syncing your activity data</span>
                 </p>
+                <!-- Redirect URI setup helper -->
+                <div x-show="!googleFitConnected" class="mt-2 p-3 rounded-xl bg-slate-800/80 border border-slate-700/50 space-y-1.5">
+                    <p class="text-[10px] font-bold text-amber-400">⚙️ If sign-in fails: add this exact URL to Google Cloud Console → Authorized Redirect URIs:</p>
+                    <div class="flex items-center gap-2">
+                        <code class="text-[10px] font-mono text-emerald-300 flex-1 break-all select-all bg-slate-900/60 px-2 py-1.5 rounded-lg" x-text="window.location.href.split('#')[0]"></code>
+                        <button @click="navigator.clipboard&&navigator.clipboard.writeText(window.location.href.split('#')[0]).then(function(){alert('URL copied to clipboard!')})"
+                                class="shrink-0 text-[9px] font-black text-brand-400 border border-brand-400/30 px-2 py-1 rounded-lg hover:bg-brand-400/10 whitespace-nowrap">Copy URL</button>
+                    </div>
+                </div>
             </div>
             <div class="flex items-center gap-2">
                 <button x-show="!googleFitConnected" @click="connectGoogleFit()"
@@ -1783,14 +1792,7 @@
                 <li>• <strong class="text-slate-800 dark:text-white">Continue Offline</strong> — You can use the app without an account. Data stays on this device only</li>
                 <li>• <strong class="text-slate-800 dark:text-white">🏃 Google Fit</strong> — In Settings → Google Fit, click "Sign in with Google" to sync steps, calories burned and active minutes from your Google account's Fit data</li>
                 <li>• <strong class="text-slate-800 dark:text-white">Why Google Sign-In?</strong> — Google Fit data is private to each user. Signing in lets the app read only YOUR Fit data with your permission — just like any fitness app</li>
-                <li>• <strong class="text-slate-800 dark:text-white">Google Fit Setup (developer — free):</strong> 
-                    1. Go to <a href="https://console.cloud.google.com" target="_blank" class="text-brand-400 underline">console.cloud.google.com</a> → Create project → 
-                    2. APIs &amp; Services → Enable APIs → search "Fitness API" → Enable → 
-                    3. OAuth consent screen → External → Add your domain → 
-                    4. Credentials → Create → OAuth 2.0 Client ID → Web Application → Add your GitHub Pages URL as Authorized JavaScript Origin → 
-                    5. Copy Client ID → paste into GFIT_CLIENT_ID constant in the code → Deploy. 
-                    <em class="text-slate-500">All free — no billing required for Fitness API access.</em>
-                </li>
+                <li>• <strong class="text-slate-800 dark:text-white">Privacy</strong> — Google Fit sign-in reads only YOUR personal step and activity data. The app never stores or shares it.</li>
             </ul>
         </div>
 
@@ -5165,86 +5167,64 @@ function vytaraApp() {
                 alert('AI nutrition search is not configured.'); return;
             }
             this.aiNutritionLoading = true;
-            const qty    = amount > 0 ? `${amount} ${unit}` : '100g';
-            const prompt = 'Return ONLY a raw JSON object (no markdown, no explanation) for the nutritional content of ' + qty + ' of "' + food + '". Format: {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
-            const isNewKey = GEMINI_API_KEY.startsWith('AQ.');
+            const qty    = amount > 0 ? (amount + ' ' + unit) : '100g';
+            const prompt = 'Return ONLY a JSON object (no markdown, no text, no explanation) with the nutritional values for ' + qty + ' of "' + food + '". Use this exact format: {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
 
-            // ── Approach 1: Pre-loaded official SDK ──────────────────
-            if(window.GoogleGenerativeAI) {
-                const sdkModels = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
-                for(const mName of sdkModels) {
-                    try {
-                        const genAI  = new window.GoogleGenerativeAI(GEMINI_API_KEY);
-                        const model  = genAI.getGenerativeModel({model:mName, generationConfig:{temperature:0.1,maxOutputTokens:150}});
-                        const result = await model.generateContent(prompt);
-                        const text   = result.response.text();
-                        const match  = text.match(/[{][^{}]*[}]/);
-                        if(!match) continue;
-                        const n = JSON.parse(match[0]);
-                        if((n.calories||n.protein||n.carbs||n.fat) > 0) {
-                            this.mealEntry.calories = Math.round(n.calories||0);
-                            this.mealEntry.protein  = Math.round((n.protein||0)*10)/10;
-                            this.mealEntry.carbs    = Math.round((n.carbs||0)*10)/10;
-                            this.mealEntry.fat      = Math.round((n.fat||0)*10)/10;
-                            this.mealEntry.fibre    = Math.round((n.fibre||n.fiber||0)*10)/10;
-                            this.mealEntryFoodRef   = null;
+            // EXACT same pattern as working reference app:
+            // ?key= URL param, v1beta endpoint, no Bearer token
+            const MODELS = [
+                'gemini-2.5-flash-lite-preview-06-17',
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-flash',
+            ];
+            const BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
+            const body = JSON.stringify({
+                contents: [{parts: [{text: prompt}]}],
+                generationConfig: {temperature: 0.1, maxOutputTokens: 200}
+            });
+
+            for(const model of MODELS) {
+                try {
+                    const url  = BASE + model + ':generateContent?key=' + GEMINI_API_KEY;
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: body
+                    });
+                    if(!resp.ok) {
+                        var errData = await resp.json().catch(function(){ return {}; });
+                        if(resp.status === 404) continue; // model not found, try next
+                        if(resp.status === 401 || resp.status === 403) {
                             this.aiNutritionLoading = false;
+                            alert('API key rejected (HTTP ' + resp.status + '). Please verify your GEMINI_API_KEY is correct and has access to the Generative Language API.');
                             return;
                         }
-                    } catch(e) {
-                        if(e.message && e.message.includes('API_KEY_INVALID')) {
-                            this.aiNutritionLoading = false;
-                            alert('Invalid API key.'); return;
-                        }
-                        if(e.message && (e.message.includes('not found') || e.message.includes('404'))) break;
                         continue;
                     }
+                    const data = await resp.json();
+                    var txt = '';
+                    try { txt = data.candidates[0].content.parts[0].text || ''; } catch(pe) { continue; }
+                    txt = txt.trim().replace(/```json|```/gi, '').trim();
+                    var match = txt.match(/\{[^}]*\}/);
+                    if(!match) continue;
+                    var n = JSON.parse(match[0]);
+                    if((n.calories || n.protein || n.carbs || n.fat) > 0) {
+                        this.mealEntry.calories = Math.round(n.calories  || 0);
+                        this.mealEntry.protein  = Math.round((n.protein  || 0) * 10) / 10;
+                        this.mealEntry.carbs    = Math.round((n.carbs    || 0) * 10) / 10;
+                        this.mealEntry.fat      = Math.round((n.fat      || 0) * 10) / 10;
+                        this.mealEntry.fibre    = Math.round((n.fibre || n.fiber || 0) * 10) / 10;
+                        this.mealEntryFoodRef   = null;
+                        this.aiNutritionLoading = false;
+                        return; // success
+                    }
+                } catch(e) {
+                    continue;
                 }
-            }
-
-            // ── Approach 2: REST API ─────────────────────────────────
-            const BASE    = 'https://generativelanguage.googleapis.com';
-            const bodyStr = JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:150}});
-            const restModels = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash','gemini-pro'];
-            let lastErr = 'not tried';
-
-            for(const m of restModels) {
-                const variants = isNewKey ? [
-                    {url:BASE+'/v1beta/models/'+m+':generateContent', h:{'Content-Type':'application/json','Authorization':'Bearer '+GEMINI_API_KEY}},
-                    {url:BASE+'/v1beta/models/'+m+':generateContent', h:{'Content-Type':'application/json','x-goog-api-key':GEMINI_API_KEY}},
-                    {url:BASE+'/v1/models/'+m+':generateContent',     h:{'Content-Type':'application/json','Authorization':'Bearer '+GEMINI_API_KEY}},
-                ] : [
-                    {url:BASE+'/v1beta/models/'+m+':generateContent?key='+GEMINI_API_KEY, h:{'Content-Type':'application/json'}},
-                    {url:BASE+'/v1/models/'+m+':generateContent?key='+GEMINI_API_KEY,     h:{'Content-Type':'application/json'}},
-                ];
-                let modelNotFound = false;
-                for(const v of variants) {
-                    try {
-                        const res  = await fetch(v.url, {method:'POST', headers:v.h, body:bodyStr});
-                        const data = await res.json();
-                        if(res.status===404) { lastErr = m+' not found'; modelNotFound=true; break; }
-                        if(!res.ok || data.error) { lastErr = (data&&data.error&&data.error.message)||'HTTP '+res.status; continue; }
-                        const raw   = data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text||'';
-                        const match = raw.match(/[{][^{}]*[}]/);
-                        if(!match) { lastErr='No JSON in response'; continue; }
-                        const n = JSON.parse(match[0]);
-                        if((n.calories||n.protein||n.carbs||n.fat)>0){
-                            this.mealEntry.calories = Math.round(n.calories||0);
-                            this.mealEntry.protein  = Math.round((n.protein||0)*10)/10;
-                            this.mealEntry.carbs    = Math.round((n.carbs||0)*10)/10;
-                            this.mealEntry.fat      = Math.round((n.fat||0)*10)/10;
-                            this.mealEntry.fibre    = Math.round((n.fibre||n.fiber||0)*10)/10;
-                            this.mealEntryFoodRef   = null;
-                            this.aiNutritionLoading = false;
-                            return;
-                        }
-                    } catch(e) { lastErr = e.message||'fetch error'; continue; }
-                }
-                if(modelNotFound) continue;
             }
             this.aiNutritionLoading = false;
-            console.error('[VYTARA] AI lookup failed. Last error:', lastErr);
-            alert('AI lookup failed. Verify your GEMINI_API_KEY is correct and the Generative Language API is enabled for your project.');
+            alert('AI lookup failed. Please enter macros manually.');
         },
 
 
@@ -5351,7 +5331,10 @@ function vytaraApp() {
             ].join(' '));
             // Use exact origin for redirect — add THIS URL to Google Cloud Console
             // Authorized JavaScript Origins AND Authorized Redirect URIs
-            const redirectUri = window.location.origin;
+            // Use the exact current page URL as redirect URI
+            // Make sure this exact URL is added to Google Cloud Console → Authorized Redirect URIs
+            const redirectUri = window.location.href.split('#')[0];
+            console.log('[VYTARA] Google Fit redirect URI:', redirectUri, '— add this to Google Cloud Console');
             const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
                 + '?client_id=' + GFIT_CLIENT_ID
                 + '&redirect_uri=' + encodeURIComponent(redirectUri)
@@ -5941,267 +5924,4 @@ function vytaraApp() {
                 html += `</tbody></table>`;
             }
 
-            html += `<div class="footer">VYTARA Premium Fitness OS · Report generated ${new Date().toLocaleString()}</div></body></html>`;
-
-            const blob = new Blob([html], { type: 'text/html' });
-            const url  = URL.createObjectURL(blob);
-            const win  = window.open(url, '_blank');
-            if(win) setTimeout(() => { win.document.title = 'VYTARA Report · ' + (this.profile.name || ''); win.print(); }, 900);
-            else { const a = document.createElement('a'); a.href = url; a.download = 'vytara_report_' + this.getToday() + '.html'; a.click(); }
-        },
-
-        exportJSON() {
-            const data={profile:this.profile,workouts:this.workouts,dietLogs:this.dietLogs,metricsLogs:this.metricsLogs,waterLogs:this.waterLogs,photos:this.photos.map(p=>({...p,url:'[omitted]'})),customGoals:this.customGoals,customExercises:this.customExercises,challenges:this.challenges,exportedAt:new Date().toISOString()};
-            const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-            const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='vytara_backup_'+this.getToday()+'.json'; a.click();
-        },
-
-        exportCSV() {
-            let csv='Date,Type,Exercise/Meals,Volume/Calories,Protein,Duration\n';
-            this.workouts.forEach(w=>{ csv+=`${w.date},Workout,"${(w.variations||[]).map(v=>v.exercise).join('/')||w.exercise||''}",${this.calculateVolume(w)},,${w.duration||w.minutes||0}\n`; });
-            this.dietLogs.forEach(d=>{ csv+=`${d.date},Nutrition,"${(d.meals||[]).map(m=>m.name).join('/')||''}",${d.calories||d.totalCalories||0},${d.protein||d.totalProtein||0},\n`; });
-            const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='vytara_export_'+this.getToday()+'.csv'; a.click();
-        },
-
-        exportToDoc() {
-            let html=`<html><head><meta charset="UTF-8"><title>VYTARA Report</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#111}h1{color:#2563eb}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #e2e8f0;padding:10px;text-align:left}th{background:#f1f5f9}</style></head><body>`;
-            html+=`<h1>VYTARA Fitness Report</h1><p>Generated: ${new Date().toLocaleString()}</p>`;
-            html+=`<h2>Workouts (last 30)</h2><table><tr><th>Date</th><th>Type</th><th>Exercises</th><th>Volume</th><th>Duration</th></tr>`;
-            this.workouts.slice(-30).forEach(w=>{ html+=`<tr><td>${w.date}</td><td>${w.type||'Strength'}</td><td>${(w.variations||[]).map(v=>v.exercise).join(', ')||w.exercise||'—'}</td><td>${this.calculateVolume(w)} kg</td><td>${w.duration||0} min</td></tr>`; });
-            html+=`</table></body></html>`;
-            const blob=new Blob([html],{type:'application/msword'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='vytara_report_'+this.getToday()+'.doc'; a.click();
-        },
-
-        importJSON(event) {
-            const file=event.target.files[0]; if(!file) return;
-            const reader=new FileReader();
-            reader.onload=(e)=>{
-                try { const data=JSON.parse(e.target.result); this._applyLoadedData(data); this.persist(); alert('Data imported successfully!'); }
-                catch(err) { alert('Invalid JSON file.'); }
-            };
-            reader.readAsText(file);
-        },
-
-        async sendFeedback() {
-            const f = this.feedbackForm;
-            if(!f.name.trim() || !f.email.trim() || !f.message.trim()) {
-                alert('Please fill in all fields.'); return;
-            }
-            this.feedbackLoading = true;
-            try {
-                const res = await fetch('https://formsubmit.co/ajax/revanth.abbati@gmail.com', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({
-                        _subject: 'VYTARA App Feedback — ' + f.rating + '★',
-                        name: f.name,
-                        email: f.email,
-                        rating: f.rating + ' stars',
-                        message: f.message,
-                        _captcha: 'false',
-                        _template: 'table'
-                    })
-                });
-                const data = await res.json();
-                if(data.success === 'true' || data.success === true || res.ok) {
-                    this.feedbackSent = true;
-                    this.feedbackForm = { name:'', email:'', message:'', rating:5 };
-                } else {
-                    alert('Failed to send. Please try again.');
-                }
-            } catch(e) {
-                // Fallback: open mailto
-                const sub = encodeURIComponent('VYTARA Feedback — ' + f.rating + '★');
-                const body = encodeURIComponent('Name: ' + f.name + '\nEmail: ' + f.email + '\nRating: ' + f.rating + ' stars\n\n' + f.message);
-                window.open('mailto:revanth.abbati@gmail.com?subject=' + sub + '&body=' + body);
-            }
-            this.feedbackLoading = false;
-        },
-
-        hardReset() {
-            if(!confirm('This will delete ALL your data. Are you sure?')) return;
-            if(!confirm('Final confirmation: Delete everything?')) return;
-            LEGACY_KEYS.concat([VAULT_KEY]).forEach(k=>localStorage.removeItem(k));
-            location.reload();
-        }
-    };
-}
-</script>
-
-
-<!-- VIEW NUTRITION LOG MODAL -->
-<div x-show="openModals.modalDietView" x-cloak @click.self="openModals.modalDietView=false"
-     class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-start justify-center p-4 overflow-y-auto">
-    <div @click.stop class="w-full max-w-2xl bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl my-6 overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-                <h3 class="text-lg font-extrabold tracking-tight">Nutrition Details</h3>
-                <p class="text-xs text-slate-400 font-bold mt-0.5" x-text="viewingDietLog?.date + (viewingDietLog?.notes ? ' · '+viewingDietLog.notes : '')"></p>
-            </div>
-            <button @click="openModals.modalDietView=false" class="text-slate-400 hover:text-slate-600 font-black text-xl w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
-        </div>
-
-        <div class="p-5 space-y-4">
-            <!-- Meal groups (new format) -->
-            <template x-if="viewingDietLog?.mealGroups&&viewingDietLog.mealGroups.length>0">
-                <div class="space-y-4">
-                    <template x-for="(mg,mgi) in viewingDietLog.mealGroups" :key="mg.id">
-                        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-                            <!-- Meal header -->
-                            <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-700">
-                                <span class="text-xl" x-text="getMealEmoji(mg.name)"></span>
-                                <div>
-                                    <p class="text-sm font-extrabold" x-text="mg.name"></p>
-                                    <p class="text-[10px] text-slate-400 font-bold" x-text="[mg.time, mg.date].filter(Boolean).join(' · ')"></p>
-                                </div>
-                            </div>
-                            <!-- Items -->
-                            <template x-for="(item,ii) in mg.items" :key="item.id">
-                                <div class="grid items-center px-4 py-2.5 border-b border-slate-50 dark:border-slate-800/30"
-                                     style="grid-template-columns:1fr 55px 55px 50px 50px">
-                                    <p class="text-xs font-medium" x-text="item.name+(item.amount>0?' · '+item.amount+(item.unit||'g'):'')"></p>
-                                    <span class="text-center text-xs text-purple-400 font-bold" x-text="(item.calories||0)+' kcal'"></span>
-                                    <span class="text-center text-xs text-brand-400 font-bold" x-text="(item.protein||0)+'g P'"></span>
-                                    <span class="text-center text-xs text-emerald-400 font-bold" x-text="(item.carbs||0)+'g C'"></span>
-                                    <span class="text-center text-xs text-orange-400 font-bold" x-text="(item.fat||0)+'g F'"></span>
-                                </div>
-                            </template>
-                            <!-- Meal total -->
-                            <div class="grid items-center px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40"
-                                 style="grid-template-columns:1fr 55px 55px 50px 50px">
-                                <p class="text-[10px] font-black text-slate-400 uppercase">Meal Total</p>
-                                <span class="text-center text-sm font-black text-purple-400" x-text="getMealTotals(mg).calories+' kcal'"></span>
-                                <span class="text-center text-sm font-black text-brand-400" x-text="getMealTotals(mg).protein+'g'"></span>
-                                <span class="text-center text-sm font-black text-emerald-400" x-text="getMealTotals(mg).carbs+'g'"></span>
-                                <span class="text-center text-sm font-black text-orange-400" x-text="getMealTotals(mg).fat+'g'"></span>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </template>
-
-            <!-- Legacy flat meals (old format) -->
-            <template x-if="!viewingDietLog?.mealGroups||viewingDietLog.mealGroups.length===0">
-                <div class="space-y-2">
-                    <template x-for="(m,mi) in (viewingDietLog?.meals||[])" :key="mi">
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-                            <div>
-                                <p class="text-xs font-bold" x-text="m.name"></p>
-                                <p class="text-[10px] text-slate-400" x-text="[m.type,m.time].filter(Boolean).join(' · ')"></p>
-                            </div>
-                            <div class="text-right text-xs">
-                                <p class="font-bold text-purple-400" x-text="(m.calories||0)+' kcal'"></p>
-                                <p class="text-slate-400" x-text="'P:'+( m.protein||0)+' C:'+(m.carbs||0)+' F:'+(m.fat||0)"></p>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </template>
-
-            <!-- Day total -->
-            <div class="bg-gradient-to-r from-brand-500/10 to-purple-500/5 border border-brand-500/20 rounded-2xl p-4">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">📊 Day Total</p>
-                <div class="grid grid-cols-5 gap-2 text-center">
-                    <div><p class="text-[9px] font-black text-purple-400 uppercase">Calories</p><p class="text-base font-black text-purple-400" x-text="(viewingDietLog?.calories||viewingDietLog?.totalCalories||0)"></p></div>
-                    <div><p class="text-[9px] font-black text-brand-400 uppercase">Protein</p><p class="text-base font-black text-brand-400" x-text="(viewingDietLog?.protein||viewingDietLog?.totalProtein||0)+'g'"></p></div>
-                    <div><p class="text-[9px] font-black text-emerald-400 uppercase">Carbs</p><p class="text-base font-black text-emerald-400" x-text="(viewingDietLog?.carbs||viewingDietLog?.totalCarbs||0)+'g'"></p></div>
-                    <div><p class="text-[9px] font-black text-orange-400 uppercase">Fat</p><p class="text-base font-black text-orange-400" x-text="(viewingDietLog?.fat||viewingDietLog?.totalFat||0)+'g'"></p></div>
-                    <div><p class="text-[9px] font-black text-teal-400 uppercase">Fibre</p><p class="text-base font-black text-teal-400" x-text="(viewingDietLog?.fibre||viewingDietLog?.fiber||0)+'g'"></p></div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="px-5 pb-5 flex gap-3">
-            <button @click="editDiet(viewingDietLog);openModals.modalDietView=false"
-                    class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all">
-                ✏️ Edit This Log
-            </button>
-            <button @click="openModals.modalDietView=false"
-                    class="px-6 border border-slate-200 dark:border-slate-700 font-bold py-3 rounded-xl text-xs uppercase text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- FOOD EDIT MODAL -->
-<div x-show="openModals.foodEditModal" x-cloak @click.self="cancelEditFood()"
-     class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-    <div @click.stop class="w-full max-w-lg bg-white dark:bg-panelDark border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 shadow-2xl space-y-5">
-        <div class="flex items-center justify-between">
-            <h3 class="text-base font-extrabold tracking-tight">Edit Food</h3>
-            <button @click="cancelEditFood()" class="text-slate-400 hover:text-slate-600 font-black text-lg leading-none">✕</button>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-            <div class="col-span-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Food Name *</label>
-                <input type="text" x-model="editFoodForm.name" placeholder="e.g. Oats">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Category</label>
-                <select x-model="editFoodForm.category">
-                    <option>General</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option>
-                    <option>Snacks</option><option>Protein</option><option>Grains</option><option>Dairy</option>
-                    <option>Vegetables</option><option>Fruits</option><option>Supplements</option><option>Drinks</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Macros Per</label>
-                <div class="flex gap-1">
-                    <input type="number" x-model="editFoodForm.per" placeholder="100" class="flex-1">
-                    <select x-model="editFoodForm.unit" class="!w-16">
-                        <option value="g">g</option><option value="ml">ml</option>
-                        <option value="pc">pc</option><option value="cup">cup</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block mb-1">Default Serving ⭐</label>
-                <input type="number" x-model="editFoodForm.defaultAmount" placeholder="e.g. 250">
-            </div>
-        </div>
-        <div class="grid grid-cols-4 gap-2">
-            <div>
-                <label class="text-[10px] font-black text-purple-400 uppercase block mb-1">Calories *</label>
-                <input type="number" x-model="editFoodForm.calories" placeholder="kcal">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-brand-400 uppercase block mb-1">Protein (g)</label>
-                <input type="number" x-model="editFoodForm.protein" placeholder="0">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-amber-400 uppercase block mb-1">Carbs (g)</label>
-                <input type="number" x-model="editFoodForm.carbs" placeholder="0">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-red-400 uppercase block mb-1">Fat (g)</label>
-                <input type="number" x-model="editFoodForm.fat" placeholder="0">
-            </div>
-        </div>
-        <!-- Live preview -->
-        <div x-show="editFoodForm.defaultAmount>0 && editFoodForm.calories>0"
-             class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-xs">
-            <p class="font-black text-emerald-400 mb-1">📐 Preview: Default serving (<span x-text="editFoodForm.defaultAmount"></span><span x-text="editFoodForm.unit||'g'"></span>)</p>
-            <p class="text-slate-400">
-                <span x-text="Math.round(editFoodForm.calories * editFoodForm.defaultAmount / editFoodForm.per)"></span> kcal ·
-                <span x-text="Math.round(editFoodForm.protein * editFoodForm.defaultAmount / editFoodForm.per * 10)/10"></span>g protein ·
-                <span x-text="Math.round(editFoodForm.carbs * editFoodForm.defaultAmount / editFoodForm.per * 10)/10"></span>g carbs ·
-                <span x-text="Math.round(editFoodForm.fat * editFoodForm.defaultAmount / editFoodForm.per * 10)/10"></span>g fat
-            </p>
-        </div>
-        <div class="flex gap-3">
-            <button @click="saveEditFood()"
-                    class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-black py-3 rounded-xl text-sm tracking-widest uppercase transition-all">
-                Save Changes
-            </button>
-            <button @click="cancelEditFood()"
-                    class="px-6 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 font-black py-3 rounded-xl text-sm uppercase transition-all">
-                Cancel
-            </button>
-        </div>
-    </div>
-</div>
-
-</body>
-</html>
+            html += `<div class="footer">VYTARA Premium Fitness OS · Report generated ${new Date().toLocaleString()}</div></body></html>
