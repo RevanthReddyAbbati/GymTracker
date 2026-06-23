@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VYTARA Admin Settings</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>try{tailwind.config={darkMode:'class',theme:{extend:{colors:{brand:{400:'#60a5fa',500:'#3b82f6',600:'#2563eb'}}}}}}catch(e){}</script>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#020817;}
+  .inp{display:block;width:100%;border-radius:10px;border:1.5px solid #334155;background:#0f172a;color:#f1f5f9;padding:11px 14px;font-size:13px;outline:none;transition:border-color .15s;}
+  .inp:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+  .inp::placeholder{color:#475569;}
+  .card{background:#0f172a;border:1px solid #1e293b;border-radius:18px;padding:24px;}
+  .btn-primary{background:#3b82f6;color:#fff;font-weight:800;padding:11px 20px;border-radius:11px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .15s;border:none;}
+  .btn-primary:hover{background:#2563eb;}
+  .btn-primary:active{transform:scale(.97);}
+  .btn-secondary{background:transparent;color:#64748b;font-weight:700;padding:11px 16px;border-radius:11px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .15s;border:1.5px solid #1e293b;}
+  .btn-secondary:hover{border-color:#334155;color:#94a3b8;}
+  .btn-danger{background:transparent;color:#f87171;font-weight:700;padding:11px 16px;border-radius:11px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .15s;border:1.5px solid rgba(239,68,68,.2);}
+  .btn-danger:hover{background:rgba(239,68,68,.08);}
+  select{display:block;width:100%;border-radius:10px;border:1.5px solid #334155;background:#0f172a;color:#f1f5f9;padding:11px 14px;font-size:13px;outline:none;}
+</style>
+</head>
+<body class="dark min-h-screen text-slate-100">
+
+<!-- ═══ LOGIN ═══ -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-sm space-y-5">
+    <div class="text-center space-y-2">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-2xl">🔐</div>
+      <h1 class="text-xl font-black text-white">VYTARA Admin</h1>
+      <p class="text-xs text-slate-400">Internal API Configuration Panel</p>
+    </div>
+    <div class="card space-y-4">
+      <div id="loginErr" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2"></div>
+      <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Email</label>
+        <input class="inp" type="email" id="loginEmail" placeholder="admin@email.com" autocomplete="email"></div>
+      <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Password</label>
+        <input class="inp" type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-primary w-full" onclick="doLogin()">Sign In</button>
+    </div>
+    <p class="text-center text-[10px] text-slate-700">VYTARA Premium Fitness OS · Restricted Access</p>
+  </div>
+</div>
+
+<!-- ═══ ADMIN PANEL ═══ -->
+<div id="adminPanel" class="hidden min-h-screen">
+
+  <!-- Header -->
+  <header style="background:#0a0f1e;border-bottom:1px solid #1e293b;" class="sticky top-0 z-50">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center font-black text-blue-400 text-sm">V</div>
+        <div>
+          <p class="text-sm font-black text-white">VYTARA Admin Settings</p>
+          <p id="syncStatus" class="text-[10px] text-slate-400">Loading config…</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="text-xs font-bold text-blue-400 hover:text-blue-300">← Open VYTARA</a>
+        <button onclick="doLogout()" class="text-xs font-bold text-slate-500 hover:text-red-400 transition-colors">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-8 space-y-5">
+
+    <!-- How it works -->
+    <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:14px;padding:14px 16px;" class="flex gap-3 items-start">
+      <span class="text-base shrink-0">ℹ️</span>
+      <div>
+        <p class="text-xs font-black text-blue-300">Keys saved here are stored in Firebase</p>
+        <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">All users on all devices get the keys automatically — no manual setup needed per device. Changes take effect immediately for all users.</p>
+      </div>
+    </div>
+
+    <!-- GEMINI AI KEY -->
+    <div class="card space-y-5">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="font-black text-white flex items-center gap-2">✨ Google Gemini AI</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Powers AI nutrition search — stored in Firebase, shared to all users</p>
+        </div>
+        <span id="geminiStatus" class="text-[10px] font-black px-2.5 py-1 rounded-full border text-slate-400 border-slate-700">Loading…</span>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">API Key</label>
+        <div class="relative">
+          <input class="inp pr-10" type="password" id="geminiKey" placeholder="AQ.Ab... or AIzaSy..." oninput="markChanged('gemini')">
+          <button onclick="toggleVis('geminiKey','geminiEye')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+            <svg id="geminiEye" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-500">Get free key at <a href="https://aistudio.google.com/apikey" target="_blank" class="text-blue-400 hover:underline">aistudio.google.com/apikey</a></p>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Model</label>
+        <select id="geminiModel">
+          <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Recommended — Fastest)</option>
+          <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+        </select>
+      </div>
+
+      <div id="geminiResult" class="hidden text-xs font-bold px-3 py-2.5 rounded-xl border"></div>
+
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-secondary" onclick="testGemini()">▶ Test Connection</button>
+        <button class="btn-primary" onclick="saveGemini()">✓ Save to Firebase</button>
+        <button class="btn-danger" onclick="clearGemini()">Clear</button>
+      </div>
+    </div>
+
+    <!-- GOOGLE FIT -->
+    <div class="card space-y-5">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="font-black text-white flex items-center gap-2">🏃 Google Fit OAuth</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Enables step tracking, heart rate and sleep sync</p>
+        </div>
+        <span id="gfitStatus" class="text-[10px] font-black px-2.5 py-1 rounded-full border text-slate-400 border-slate-700">Loading…</span>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">OAuth Client ID</label>
+        <div class="relative">
+          <input class="inp pr-10" type="password" id="gfitId" placeholder="123456789-abc.apps.googleusercontent.com" oninput="markChanged('gfit')">
+          <button onclick="toggleVis('gfitId','gfitEye')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+            <svg id="gfitEye" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-500">Get from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="text-blue-400 hover:underline">Google Cloud Console</a> → OAuth 2.0 Client IDs</p>
+      </div>
+
+      <!-- Redirect URI -->
+      <div style="background:#0a0f1e;border:1px solid #1e293b;border-radius:12px;padding:12px 14px;" class="space-y-2">
+        <p class="text-[10px] font-black text-amber-400 uppercase tracking-wider">Required: Add this URL to Authorized Redirect URIs in Google Cloud Console</p>
+        <div class="flex items-center gap-2">
+          <code id="redirectUri" class="text-[11px] font-mono text-emerald-300 flex-1 break-all"></code>
+          <button onclick="copyUri()" style="background:#1e293b;border:1px solid #334155;color:#60a5fa;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;">Copy</button>
+        </div>
+      </div>
+
+      <div id="gfitResult" class="hidden text-xs font-bold px-3 py-2.5 rounded-xl border"></div>
+
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-primary" onclick="saveGfit()">✓ Save to Firebase</button>
+        <button class="btn-danger" onclick="clearGfit()">Clear</button>
+      </div>
+    </div>
+
+    <!-- STORED VALUES -->
+    <div class="card space-y-4">
+      <h2 class="text-sm font-black text-slate-300 uppercase tracking-wider">📋 Currently in Firebase</h2>
+      <div class="space-y-2 text-xs">
+        <div style="background:#0a0f1e;border-radius:10px;padding:10px 14px;" class="flex justify-between items-center">
+          <span class="font-bold text-slate-500">Gemini Key</span>
+          <span id="fbGeminiDisplay" class="font-mono text-slate-300">—</span>
+        </div>
+        <div style="background:#0a0f1e;border-radius:10px;padding:10px 14px;" class="flex justify-between items-center">
+          <span class="font-bold text-slate-500">Gemini Model</span>
+          <span id="fbModelDisplay" class="font-mono text-slate-300">—</span>
+        </div>
+        <div style="background:#0a0f1e;border-radius:10px;padding:10px 14px;" class="flex justify-between items-center">
+          <span class="font-bold text-slate-500">Google Fit Client ID</span>
+          <span id="fbGfitDisplay" class="font-mono text-slate-300">—</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }                    from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, deleteField } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js';
+
+const FB_CONFIG = {
+    apiKey: 'AIzaSyAeHZRyQcAXAIKD2bW72IF_mEIIdCfH0dI',
+    authDomain: 'gym-tracker-ec342.firebaseapp.com',
+    projectId: 'gym-tracker-ec342',
+    appId: '1:799478199566:web:1ae71f357400d9795c135f'
+};
+const app  = initializeApp(FB_CONFIG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+window._adminAuth = auth;
+window._adminDB   = db;
+window._adminDoc  = () => doc(db, 'config', 'apiKeys');
+window._getDoc    = getDoc;
+window._setDoc    = setDoc;
+window._delField  = deleteField;
+
+// ── LOGIN ──────────────────────────────────────────────────
+window.doLogin = async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    const err   = document.getElementById('loginErr');
+    err.classList.add('hidden');
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        initAdmin();
+    } catch(e) {
+        err.textContent = 'Invalid credentials. ' + (e.message || '');
+        err.classList.remove('hidden');
+    }
+};
+
+window.doLogout = async function() {
+    await signOut(auth);
+    location.reload();
+};
+
+// ── INIT ADMIN ─────────────────────────────────────────────
+async function initAdmin() {
+    // Set redirect URI
+    const base = window.location.href.replace('settings.html','');
+    document.getElementById('redirectUri').textContent = base;
+
+    // Load current config from Firebase
+    try {
+        const snap = await getDoc(window._adminDoc());
+        const d    = snap.exists() ? snap.data() : {};
+        if(d.geminiKey) {
+            document.getElementById('geminiKey').value = d.geminiKey;
+            document.getElementById('geminiModel').value = d.geminiModel || 'gemini-3.1-flash-lite';
+            setStatus('geminiStatus', 'saved', '✓ Saved in Firebase');
+        } else {
+            setStatus('geminiStatus', 'not_set', '○ Not configured');
+        }
+        if(d.gfitClientId) {
+            document.getElementById('gfitId').value = d.gfitClientId;
+            setStatus('gfitStatus', 'saved', '✓ Saved in Firebase');
+        } else {
+            setStatus('gfitStatus', 'not_set', '○ Not configured');
+        }
+        updateStoredDisplay(d);
+        document.getElementById('syncStatus').textContent = 'Connected to Firebase ✓';
+    } catch(e) {
+        document.getElementById('syncStatus').textContent = 'Firebase read error: ' + e.message;
+    }
+}
+
+// ── GEMINI ─────────────────────────────────────────────────
+window.testGemini = async function() {
+    const key   = document.getElementById('geminiKey').value.trim();
+    const model = document.getElementById('geminiModel').value;
+    const res   = document.getElementById('geminiResult');
+    if(!key) { showResult(res, '❌ Enter an API key first', false); return; }
+    setStatus('geminiStatus', 'testing', '⟳ Testing…');
+    showResult(res, '⟳ Testing connection…', null);
+    try {
+        const url  = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+        const resp = await fetch(url, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({contents:[{parts:[{text:'Reply OK only'}]}],generationConfig:{maxOutputTokens:5}})
+        });
+        const data = await resp.json();
+        if(!resp.ok||data.error) {
+            setStatus('geminiStatus','error','✗ Error');
+            showResult(res, '❌ ' + (data?.error?.message||'HTTP '+resp.status), false);
+        } else {
+            setStatus('geminiStatus','ok','✓ Connected');
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+            showResult(res, `✅ Connected! Model: ${model} | Key type: ${key.startsWith('AQ.')?'Auth Key':'Standard Key'}`, true);
+        }
+    } catch(e) {
+        setStatus('geminiStatus','error','✗ Error');
+        showResult(res, '❌ Network error: ' + e.message, false);
+    }
+};
+
+window.saveGemini = async function() {
+    const key   = document.getElementById('geminiKey').value.trim();
+    const model = document.getElementById('geminiModel').value;
+    const res   = document.getElementById('geminiResult');
+    if(!key) { showResult(res,'❌ Enter an API key first',false); return; }
+    try {
+        await setDoc(window._adminDoc(), {geminiKey:key, geminiModel:model}, {merge:true});
+        setStatus('geminiStatus','saved','✓ Saved in Firebase');
+        showResult(res, '✅ Gemini key saved to Firebase! All users will use this key automatically.', true);
+        const snap = await getDoc(window._adminDoc());
+        updateStoredDisplay(snap.exists()?snap.data():{});
+    } catch(e) {
+        showResult(res, '❌ Firebase save failed: '+e.message, false);
+    }
+};
+
+window.clearGemini = async function() {
+    if(!confirm('Remove Gemini key from Firebase? AI Search will stop working for all users.')) return;
+    await setDoc(window._adminDoc(), {geminiKey:window._delField(), geminiModel:window._delField()}, {merge:true});
+    document.getElementById('geminiKey').value = '';
+    document.getElementById('geminiResult').classList.add('hidden');
+    setStatus('geminiStatus','not_set','○ Not configured');
+    const snap = await getDoc(window._adminDoc());
+    updateStoredDisplay(snap.exists()?snap.data():{});
+};
+
+// ── GOOGLE FIT ─────────────────────────────────────────────
+window.saveGfit = async function() {
+    const clientId = document.getElementById('gfitId').value.trim();
+    const res = document.getElementById('gfitResult');
+    if(!clientId) { showResult(res,'❌ Enter a Client ID first',false); return; }
+    try {
+        await setDoc(window._adminDoc(), {gfitClientId:clientId}, {merge:true});
+        setStatus('gfitStatus','saved','✓ Saved in Firebase');
+        showResult(res, '✅ Google Fit Client ID saved to Firebase! All users can now connect Google Fit.', true);
+        const snap = await getDoc(window._adminDoc());
+        updateStoredDisplay(snap.exists()?snap.data():{});
+    } catch(e) {
+        showResult(res,'❌ Firebase save failed: '+e.message,false);
+    }
+};
+
+window.clearGfit = async function() {
+    if(!confirm('Remove Google Fit Client ID from Firebase?')) return;
+    await setDoc(window._adminDoc(), {gfitClientId:window._delField()}, {merge:true});
+    document.getElementById('gfitId').value = '';
+    document.getElementById('gfitResult').classList.add('hidden');
+    setStatus('gfitStatus','not_set','○ Not configured');
+    const snap = await getDoc(window._adminDoc());
+    updateStoredDisplay(snap.exists()?snap.data():{});
+};
+
+// ── HELPERS ────────────────────────────────────────────────
+window.markChanged = function(which) {
+    setStatus(which==='gemini'?'geminiStatus':'gfitStatus','unsaved','● Unsaved changes');
+};
+
+window.toggleVis = function(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    input.type = input.type==='password'?'text':'password';
+};
+
+window.copyUri = function() {
+    const uri = document.getElementById('redirectUri').textContent;
+    navigator.clipboard&&navigator.clipboard.writeText(uri).then(()=>alert('Redirect URI copied!'));
+};
+
+function setStatus(id, state, text) {
+    const el  = document.getElementById(id);
+    const cls = {
+        saved:   'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+        not_set: 'text-slate-500 border-slate-700 bg-transparent',
+        testing: 'text-blue-400 border-blue-500/30 bg-blue-500/10',
+        ok:      'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+        error:   'text-red-400 border-red-500/30 bg-red-500/10',
+        unsaved: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
+    }[state]||'text-slate-400 border-slate-700';
+    el.textContent = text;
+    el.className = `text-[10px] font-black px-2.5 py-1 rounded-full border ${cls}`;
+}
+
+function showResult(el, msg, ok) {
+    el.textContent = msg;
+    el.className = `text-xs font-bold px-3 py-2.5 rounded-xl border ${
+        ok===true  ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
+        ok===false ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                     'text-blue-400 border-blue-500/20 bg-blue-500/10'}`;
+    el.classList.remove('hidden');
+}
+
+function mask(v) { return v ? v.slice(0,6)+'••••••'+v.slice(-4) : '—'; }
+function updateStoredDisplay(d) {
+    document.getElementById('fbGeminiDisplay').textContent = mask(d.geminiKey);
+    document.getElementById('fbModelDisplay').textContent  = d.geminiModel||'—';
+    document.getElementById('fbGfitDisplay').textContent   = mask(d.gfitClientId);
+}
+</script>
+</body>
+</html>
