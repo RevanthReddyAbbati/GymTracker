@@ -1985,28 +1985,30 @@
         </div>
     </div>
 </div>
-</div><!-- end app shell -->
-
-
+</main><!-- end tab content -->
     <!-- ══ App Footer ══ -->
-    <footer x-show="currentView==='app'"
-            class="no-print shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-panelDark/95 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold text-slate-400">
-            <div class="flex items-center gap-2">
-                <span class="font-black text-brand-500 uppercase tracking-wider">VYTARA</span>
-                <span class="hidden sm:inline text-slate-300 dark:text-slate-600">PREMIUM FITNESS OS</span>
-                <span x-show="firebaseUser" class="flex items-center gap-1 text-emerald-400">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Synced
-                </span>
-            </div>
-            <div class="text-center hidden md:block text-slate-400">
-                Designed &amp; Developed by <strong class="text-slate-500 dark:text-slate-300">Revanth Reddy Abbati</strong>
-            </div>
-            <div class="text-right">
-                © 2026 VYTARA · All rights reserved
-            </div>
+    <footer class="no-print shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-panelDark px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 text-[10px] font-bold">
+            <span class="font-black text-brand-500 uppercase tracking-wider text-xs">VYTARA</span>
+            <span class="text-slate-400 dark:text-slate-500">PREMIUM FITNESS OS</span>
+            <span x-show="firebaseUser" class="flex items-center gap-1.5 text-emerald-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-[10px]">Synced</span>
+            </span>
+            <span x-show="!firebaseUser" class="flex items-center gap-1.5 text-amber-400 text-[10px]">
+                <span class="text-sm">⚡</span> Local
+            </span>
+        </div>
+        <div class="hidden md:block text-[10px] font-bold text-slate-400">
+            Designed &amp; Developed by <strong class="text-slate-600 dark:text-slate-300">Revanth Reddy Abbati</strong>
+        </div>
+        <div class="text-[10px] font-bold text-slate-400">
+            © 2026 VYTARA · All rights reserved
         </div>
     </footer>
+</div><!-- end right column -->
+</div><!-- end app shell -->
+
 
 <!-- FORGOT PASSWORD MODAL -->
 <div x-show="forgotPasswordMode"
@@ -5277,47 +5279,61 @@ function vytaraApp() {
             const unit   = this.mealEntry._unit || 'g';
             if(!food) { alert('Enter a food name first.'); return; }
             if(!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-                alert('AI nutrition search requires an API key. Set GEMINI_API_KEY in the code.'); return;
+                alert('AI nutrition search requires an API key.'); return;
             }
             this.aiNutritionLoading = true;
             const qty    = amount > 0 ? (amount + ' ' + unit) : '100g';
-            const prompt = 'Return ONLY a JSON object. No markdown, no text before or after. Nutritional values for ' + qty + ' of "' + food + '": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
+            const prompt = 'Return ONLY a JSON object. No markdown, no extra text. Nutritional values for ' + qty + ' of "' + food + '". Exact format: {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
             const reqBody = JSON.stringify({
                 contents:[{parts:[{text:prompt}]}],
                 generationConfig:{temperature:0, maxOutputTokens:120}
             });
-            // EXACT same call pattern as the working ticket validator reference app
-            // Priority: models confirmed available in Google AI Studio (Image 1)
+            // KEY INSIGHT from ticket validator (Image 1):
+            // gemini-3.1-flash-lite WORKS with AQ.Ab keys ✅
+            // gemini-2.5-flash-lite-preview-06-17 returns 401 with AQ.Ab keys ❌
+            // IMPORTANT: DON'T stop on 401 — different models accept different key formats!
             const MODELS = [
-                'gemini-2.5-flash-lite-preview-06-17',  // Ticket validator default (confirmed working)
-                'gemini-3.1-flash-lite',                 // Image 1: "3.1 Flash-Lite"
-                'gemini-3.5-flash',                      // Image 1: "3.5 Flash"
+                'gemini-3.1-flash-lite',                 // ✅ CONFIRMED working with AQ.Ab key (Image 1)
+                'gemini-3.5-flash',                      // Newer models also support new key format
                 'gemini-2.5-flash',
                 'gemini-2.0-flash',
+                'gemini-2.5-flash-lite-preview-06-17',  // Old model - may reject AQ.Ab key
                 'gemini-1.5-flash',
             ];
+            const endpoints = [
+                'https://generativelanguage.googleapis.com/v1beta/models/',
+                'https://generativelanguage.googleapis.com/v1/models/',
+            ];
+            var allErrors = [];
             for(const model of MODELS) {
-                try {
-                    // v1beta endpoint + ?key= param — exact pattern from ticket validator line 962
-                    const url  = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + GEMINI_API_KEY;
-                    const resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:reqBody});
-                    if(resp.status === 401 || resp.status === 403) {
-                        // 401 = key rejected. Stop all attempts.
-                        this.aiNutritionLoading = false;
-                        alert('API key rejected (401). The key in the app may be outdated.\nUpdate GEMINI_API_KEY in the code to your current key from https://aistudio.google.com/apikey');
-                        return;
-                    }
-                    if(resp.status === 404) continue; // model not found, try next
-                    if(!resp.ok) continue;
-                    const data = await resp.json();
-                    if(data.error) continue;
-                    var txt = '';
-                    try { txt = data.candidates[0].content.parts[0].text || ''; } catch(pe) { continue; }
-                    // Clean markdown fences exactly like ticket validator line 966
-                    txt = txt.trim().replace(/```json|```/gi, '').trim();
+                for(const base of endpoints) {
                     try {
-                        var n = JSON.parse(txt);
-                        if((n.calories || n.protein || n.carbs || n.fat) > 0) {
+                        const url  = base + model + ':generateContent?key=' + GEMINI_API_KEY;
+                        const resp = await fetch(url, {
+                            method:'POST',
+                            headers:{'Content-Type':'application/json'},
+                            body: reqBody,
+                            referrerPolicy: 'no-referrer'  // Prevent referrer-based key restrictions
+                        });
+                        if(resp.status === 404) break; // Model not found on this endpoint, try other endpoint
+                        if(resp.status === 401 || resp.status === 403) {
+                            allErrors.push(model + ': HTTP ' + resp.status);
+                            break; // This model rejected key — try NEXT MODEL (don't give up entirely!)
+                        }
+                        if(!resp.ok) { allErrors.push(model + ': HTTP ' + resp.status); continue; }
+                        const data = await resp.json();
+                        if(data.error) { allErrors.push(model + ': ' + data.error.message); continue; }
+                        var txt = '';
+                        try { txt = data.candidates[0].content.parts[0].text || ''; } catch(e) { continue; }
+                        txt = txt.trim().replace(/```json|```/gi,'').trim();
+                        var n;
+                        try { n = JSON.parse(txt); } catch(e) {
+                            // Try to extract JSON object from text
+                            var m = txt.match(/\{[^{}]+\}/);
+                            if(!m) continue;
+                            try { n = JSON.parse(m[0]); } catch(e2) { continue; }
+                        }
+                        if(n && (n.calories || n.protein || n.carbs || n.fat) > 0) {
                             this.mealEntry.calories = Math.round(n.calories  || 0);
                             this.mealEntry.protein  = Math.round((n.protein  || 0) * 10) / 10;
                             this.mealEntry.carbs    = Math.round((n.carbs    || 0) * 10) / 10;
@@ -5325,13 +5341,14 @@ function vytaraApp() {
                             this.mealEntry.fibre    = Math.round((n.fibre || n.fiber || 0) * 10) / 10;
                             this.mealEntryFoodRef   = null;
                             this.aiNutritionLoading = false;
-                            return; // SUCCESS
+                            return; // ✅ SUCCESS
                         }
-                    } catch(pe) { continue; }
-                } catch(e) { continue; }
+                    } catch(e) { allErrors.push(model + ': ' + (e.message||'fetch error')); continue; }
+                }
             }
             this.aiNutritionLoading = false;
-            alert('AI lookup failed for all models. Please enter macros manually.');
+            console.error('[VYTARA] AI lookup failed. Errors:', allErrors);
+            alert('AI lookup failed. All models exhausted.\nIf you see 401 errors, go to https://aistudio.google.com/apikey and verify your key has no restrictions for https://revanthreddyabbati.github.io');
         },
 
 
