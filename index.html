@@ -82,6 +82,29 @@
         }
     </style>
     <!-- Firebase loaded on-demand via _initFirebase() when user signs in -->
+    <!-- Gemini AI SDK — pre-loaded before Alpine initializes -->
+    <script type="module">
+        async function loadGeminiSDK() {
+            const cdns = [
+                'https://esm.sh/@google/generative-ai@0.21.0',
+                'https://esm.sh/@google/generative-ai@latest',
+                'https://cdn.skypack.dev/@google/generative-ai@0.21.0',
+            ];
+            for(const cdn of cdns) {
+                try {
+                    const mod = await import(cdn);
+                    if(mod.GoogleGenerativeAI) {
+                        window.GoogleGenerativeAI = mod.GoogleGenerativeAI;
+                        console.log('[VYTARA] Gemini SDK loaded ok');
+                        return;
+                    }
+                } catch(ignore) {}
+            }
+            console.warn('[VYTARA] Gemini SDK failed to load from CDN');
+        }
+        loadGeminiSDK();
+    </script>
+
     <!-- Alpine -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -5134,7 +5157,7 @@ function vytaraApp() {
 
         // ==================== AI NUTRITION LOOKUP ====================
         async lookupNutritionAI() {
-            const food = (this.mealEntry.name || '').trim();
+            const food   = (this.mealEntry.name || '').trim();
             const amount = parseFloat(this.mealEntryAmount) || 0;
             const unit   = this.mealEntry._unit || 'g';
             if(!food) { alert('Enter a food name first.'); return; }
@@ -5143,87 +5166,85 @@ function vytaraApp() {
             }
             this.aiNutritionLoading = true;
             const qty    = amount > 0 ? `${amount} ${unit}` : '100g';
-            const prompt = `Return ONLY a raw JSON object (no markdown, no explanation) for ${qty} of "${food}": {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}`;
-
-            // AQ.Ab keys = new Google AI Auth Keys — need Bearer token OR SDK
-            // AIza keys  = old Standard keys — use ?key= URL param
+            const prompt = 'Return ONLY a raw JSON object (no markdown, no explanation) for the nutritional content of ' + qty + ' of "' + food + '". Format: {"calories":0,"protein":0,"carbs":0,"fat":0,"fibre":0}';
             const isNewKey = GEMINI_API_KEY.startsWith('AQ.');
 
-            // ── Approach 1: Official SDK via CDN (best for AQ.Ab keys) ──
-            const CDNS = [
-                'https://esm.sh/@google/generative-ai',
-                'https://esm.sh/@google/generative-ai@latest',
-                'https://cdn.skypack.dev/@google/generative-ai',
-            ];
-            for(const cdn of CDNS) {
-                try {
-                    const { GoogleGenerativeAI } = await import(cdn);
-                    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                    const MODELS = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
-                    for(const m of MODELS) {
-                        try {
-                            const model  = genAI.getGenerativeModel({model:m, generationConfig:{temperature:0.1,maxOutputTokens:150}});
-                            const result = await model.generateContent(prompt);
-                            const text   = result.response.text();
-                            const match  = text.match(/\{[\s\S]*?\}/);
-                            if(!match) continue;
-                            const n = JSON.parse(match[0]);
-                            if((n.calories||n.protein||n.carbs||n.fat) > 0) {
-                                this.mealEntry.calories=Math.round(n.calories||0);
-                                this.mealEntry.protein =Math.round((n.protein||0)*10)/10;
-                                this.mealEntry.carbs   =Math.round((n.carbs||0)*10)/10;
-                                this.mealEntry.fat     =Math.round((n.fat||0)*10)/10;
-                                this.mealEntry.fibre   =Math.round((n.fibre||n.fiber||0)*10)/10;
-                                this.mealEntryFoodRef  =null;
-                                this.aiNutritionLoading=false;
-                                return; // ✅ SDK success
-                            }
-                        } catch(me){ if(me.message&&me.message.includes('API_KEY_INVALID')){this.aiNutritionLoading=false;alert('Invalid API key.');return;} continue; }
-                    }
-                    break; // SDK loaded — model loop exhausted, stop CDN loop
-                } catch(sdkErr){ continue; } // CDN failed, try next
-            }
-
-            // ── Approach 2: REST API with correct auth for key format ──
-            const body   = JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:150}});
-            const MODELS = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash','gemini-pro'];
-            const BASE   = 'https://generativelanguage.googleapis.com';
-            let lastErr  = '';
-            for(const m of MODELS) {
-                // For AQ.Ab keys: use Bearer token. For AIza keys: use ?key= param.
-                const endpoints = isNewKey ? [
-                    [`${BASE}/v1beta/models/${m}:generateContent`, {'Authorization':`Bearer ${GEMINI_API_KEY}`,'Content-Type':'application/json'}],
-                    [`${BASE}/v1/models/${m}:generateContent`,     {'Authorization':`Bearer ${GEMINI_API_KEY}`,'Content-Type':'application/json'}],
-                    [`${BASE}/v1beta/models/${m}:generateContent`, {'x-goog-api-key':GEMINI_API_KEY,'Content-Type':'application/json'}],
-                ] : [
-                    [`${BASE}/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`, {'Content-Type':'application/json'}],
-                    [`${BASE}/v1/models/${m}:generateContent?key=${GEMINI_API_KEY}`,     {'Content-Type':'application/json'}],
-                ];
-                for(const [url, headers] of endpoints) {
+            // ── Approach 1: Pre-loaded official SDK ──────────────────
+            if(window.GoogleGenerativeAI) {
+                const sdkModels = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
+                for(const mName of sdkModels) {
                     try {
-                        const res  = await fetch(url, {method:'POST', headers, body});
-                        const data = await res.json();
-                        if(res.status===404){ lastErr=m+':not found'; break; }
-                        if(!res.ok||data.error){ lastErr=data?.error?.message||'HTTP '+res.status; continue; }
-                        const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-                        const mtch = raw.match(/\{[\s\S]*?\}/);
-                        if(!mtch){ lastErr='No JSON'; continue; }
-                        const n = JSON.parse(mtch[0]);
-                        if((n.calories||n.protein||n.carbs||n.fat)>0){
-                            this.mealEntry.calories=Math.round(n.calories||0);
-                            this.mealEntry.protein =Math.round((n.protein||0)*10)/10;
-                            this.mealEntry.carbs   =Math.round((n.carbs||0)*10)/10;
-                            this.mealEntry.fat     =Math.round((n.fat||0)*10)/10;
-                            this.mealEntry.fibre   =Math.round((n.fibre||n.fiber||0)*10)/10;
-                            this.mealEntryFoodRef  =null;
-                            this.aiNutritionLoading=false;
-                            return; // ✅ REST success
+                        const genAI  = new window.GoogleGenerativeAI(GEMINI_API_KEY);
+                        const model  = genAI.getGenerativeModel({model:mName, generationConfig:{temperature:0.1,maxOutputTokens:150}});
+                        const result = await model.generateContent(prompt);
+                        const text   = result.response.text();
+                        const match  = text.match(/[{][^{}]*[}]/);
+                        if(!match) continue;
+                        const n = JSON.parse(match[0]);
+                        if((n.calories||n.protein||n.carbs||n.fat) > 0) {
+                            this.mealEntry.calories = Math.round(n.calories||0);
+                            this.mealEntry.protein  = Math.round((n.protein||0)*10)/10;
+                            this.mealEntry.carbs    = Math.round((n.carbs||0)*10)/10;
+                            this.mealEntry.fat      = Math.round((n.fat||0)*10)/10;
+                            this.mealEntry.fibre    = Math.round((n.fibre||n.fiber||0)*10)/10;
+                            this.mealEntryFoodRef   = null;
+                            this.aiNutritionLoading = false;
+                            return;
                         }
-                    } catch(e){ lastErr=e.message; continue; }
+                    } catch(e) {
+                        if(e.message && e.message.includes('API_KEY_INVALID')) {
+                            this.aiNutritionLoading = false;
+                            alert('Invalid API key.'); return;
+                        }
+                        if(e.message && (e.message.includes('not found') || e.message.includes('404'))) break;
+                        continue;
+                    }
                 }
             }
+
+            // ── Approach 2: REST API ─────────────────────────────────
+            const BASE    = 'https://generativelanguage.googleapis.com';
+            const bodyStr = JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:150}});
+            const restModels = ['gemini-3.1-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash','gemini-pro'];
+            let lastErr = 'not tried';
+
+            for(const m of restModels) {
+                const variants = isNewKey ? [
+                    {url:BASE+'/v1beta/models/'+m+':generateContent', h:{'Content-Type':'application/json','Authorization':'Bearer '+GEMINI_API_KEY}},
+                    {url:BASE+'/v1beta/models/'+m+':generateContent', h:{'Content-Type':'application/json','x-goog-api-key':GEMINI_API_KEY}},
+                    {url:BASE+'/v1/models/'+m+':generateContent',     h:{'Content-Type':'application/json','Authorization':'Bearer '+GEMINI_API_KEY}},
+                ] : [
+                    {url:BASE+'/v1beta/models/'+m+':generateContent?key='+GEMINI_API_KEY, h:{'Content-Type':'application/json'}},
+                    {url:BASE+'/v1/models/'+m+':generateContent?key='+GEMINI_API_KEY,     h:{'Content-Type':'application/json'}},
+                ];
+                let modelNotFound = false;
+                for(const v of variants) {
+                    try {
+                        const res  = await fetch(v.url, {method:'POST', headers:v.h, body:bodyStr});
+                        const data = await res.json();
+                        if(res.status===404) { lastErr = m+' not found'; modelNotFound=true; break; }
+                        if(!res.ok || data.error) { lastErr = (data&&data.error&&data.error.message)||'HTTP '+res.status; continue; }
+                        const raw   = data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text||'';
+                        const match = raw.match(/[{][^{}]*[}]/);
+                        if(!match) { lastErr='No JSON in response'; continue; }
+                        const n = JSON.parse(match[0]);
+                        if((n.calories||n.protein||n.carbs||n.fat)>0){
+                            this.mealEntry.calories = Math.round(n.calories||0);
+                            this.mealEntry.protein  = Math.round((n.protein||0)*10)/10;
+                            this.mealEntry.carbs    = Math.round((n.carbs||0)*10)/10;
+                            this.mealEntry.fat      = Math.round((n.fat||0)*10)/10;
+                            this.mealEntry.fibre    = Math.round((n.fibre||n.fiber||0)*10)/10;
+                            this.mealEntryFoodRef   = null;
+                            this.aiNutritionLoading = false;
+                            return;
+                        }
+                    } catch(e) { lastErr = e.message||'fetch error'; continue; }
+                }
+                if(modelNotFound) continue;
+            }
             this.aiNutritionLoading = false;
-            alert('AI lookup failed. The API key may not have access to the Generative Language API. Please verify your key at https://aistudio.google.com');
+            console.error('[VYTARA] AI lookup failed. Last error:', lastErr);
+            alert('AI lookup failed. Verify your GEMINI_API_KEY is correct and the Generative Language API is enabled for your project.');
         },
 
 
@@ -5328,12 +5349,15 @@ function vytaraApp() {
                 'https://www.googleapis.com/auth/fitness.activity.read',
                 'https://www.googleapis.com/auth/fitness.body.read'
             ].join(' '));
-            const redirectUri = window.location.origin + window.location.pathname;
+            // Use exact origin for redirect — add THIS URL to Google Cloud Console
+            // Authorized JavaScript Origins AND Authorized Redirect URIs
+            const redirectUri = window.location.origin;
             const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
                 + '?client_id=' + GFIT_CLIENT_ID
                 + '&redirect_uri=' + encodeURIComponent(redirectUri)
                 + '&response_type=token'
                 + '&scope=' + SCOPE
+                + '&include_granted_scopes=true'
                 + '&prompt=select_account';
             const popup = window.open(authUrl, 'googlefit_auth', 'width=520,height=640,menubar=no,toolbar=no,location=yes');
             if(!popup) { alert('Popups are blocked. Please allow popups and try again.'); return; }
